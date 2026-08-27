@@ -1,0 +1,143 @@
+name: Fork CI and Image Promotion
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-build-promotion-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions: {}
+
+env:
+  GHCR_IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  validate:
+    name: Validate Fork Patch & Upstream Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set up tests dependencies
+        run: npm --prefix tests install
+
+      - name: Run Gemini regression tests
+        run: npm --prefix tests exec vitest run --config vitest.config.js translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+
+      - name: Build Next.js application
+        run: npm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Build candidate Docker image locally
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: .
+          load: true
+          tags: 9router:candidate-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run container startup smoke test
+        run: |
+          bash scripts/fork/smoke-test.sh 9router:candidate-test 20128
+
+  publish-and-promote:
+    name: Publish and Promote GHCR Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    needs: [validate]
+    if: |
+      needs.validate.result == 'success' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Extract metadata & determine version tags
+        id: meta-info
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          VERSION=$(python3 -c "import json; f=open('package.json'); print(json.load(f).get('version', '0.0.0'))")
+          SHORT_SHA=$(echo "${SHA}" | cut -c1-8)
+          TAG_NAME=""
+          if [[ "${REF_TYPE}" == "tag" ]]; then
+            TAG_NAME="${REF_NAME}"
+          elif [[ -f ".github/fork-metadata.json" ]]; then
+            TAG_NAME=$(python3 -c "import json; f=open('.github/fork-metadata.json'); print(json.load(f).get('synced_tag', ''))")
+          fi
+          if [[ -z "$TAG_NAME" ]]; then
+            TAG_NAME="v${VERSION}"
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "Identified Version: ${VERSION}, Tag: ${TAG_NAME}, SHA: ${SHORT_SHA}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push immutable image
+        id: build-push
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.GHCR_IMAGE }}:${{ steps.meta-info.outputs.tag_name }}-gemini.1
+            ${{ env.GHCR_IMAGE }}:sha-${{ steps.meta-info.outputs.short_sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            io.9router-fork.upstream-tag=${{ steps.meta-info.outputs.tag_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          sbom: false
+
+      - name: Smoke-test published digest
+        run: bash scripts/fork/smoke-test.sh "${{ env.GHCR_IMAGE }}@${{ steps.build-push.outputs.digest }}" 20128
+
+      - name: Promote tested digest to production
+        env:
+          DIGEST: ${{ steps.build-push.outputs.digest }}
+        run: |
+          echo "Built and pushed image digest: ${DIGEST}"
+          # Promote image digest to production while preserving old production as production-previous
+          bash scripts/fork/promote-image.sh "ghcr.io" "${{ github.repository }}" "${DIGEST}"
