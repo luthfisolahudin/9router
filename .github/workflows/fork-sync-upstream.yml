@@ -1,0 +1,120 @@
+name: Sync Upstream Stable Tag
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      force_tag:
+        description: "Optionally specify an exact stable tag to sync (e.g. v0.5.55)"
+        required: false
+        default: ""
+
+concurrency:
+  group: sync-upstream-tag
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: 22
+
+      - name: Check upstream stable tag
+        id: check
+        run: |
+          python3 scripts/fork/check-upstream-tag.py --github-output "$GITHUB_OUTPUT"
+
+      - name: Prepare sync branch and PR
+        id: sync
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TARGET_TAG="${{ github.event.inputs.force_tag || steps.check.outputs.latest_tag }}"
+          TARGET_COMMIT="${{ steps.check.outputs.latest_commit }}"
+
+          if [[ -n "${{ github.event.inputs.force_tag }}" && "${{ github.event.inputs.force_tag }}" != "${{ steps.check.outputs.latest_tag }}" ]]; then
+            # Resolve target commit for force tag
+            TARGET_COMMIT=$(git ls-remote --tags https://github.com/decolua/9router.git "refs/tags/${TARGET_TAG}^{}" | awk '{print $1}')
+            if [[ -z "$TARGET_COMMIT" ]]; then
+              TARGET_COMMIT=$(git ls-remote --tags https://github.com/decolua/9router.git "refs/tags/${TARGET_TAG}" | awk '{print $1}')
+            fi
+          fi
+
+          echo "Target sync tag: ${TARGET_TAG} (${TARGET_COMMIT})"
+          bash scripts/fork/create-sync-pr.sh "${TARGET_TAG}" "${TARGET_COMMIT}" "https://github.com/decolua/9router.git"
+
+      - name: Install dependencies
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        run: npm install && npm --prefix tests install
+
+      - name: Run Gemini regression tests
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        run: npm --prefix tests exec vitest run --config vitest.config.js translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+
+      - name: Build application
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        run: npm run build
+
+      - name: Set up Docker Buildx
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Log in to GHCR
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push candidate
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        id: candidate
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:candidate-${{ steps.sync.outputs.candidate_sha }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke-test candidate digest
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        run: bash scripts/fork/smoke-test.sh "ghcr.io/${{ github.repository }}@${{ steps.candidate.outputs.digest }}" 20128
+
+      - name: Merge validated sync PR
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge "$(cat /tmp/fork-sync-pr-number)" --merge --delete-branch
+
+      - name: Publish immutable tags and promote tested digest
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        env:
+          TARGET_TAG: ${{ github.event.inputs.force_tag || steps.check.outputs.latest_tag }}
+          DIGEST: ${{ steps.candidate.outputs.digest }}
+        run: |
+          docker buildx imagetools create --tag "ghcr.io/${{ github.repository }}:${TARGET_TAG}-gemini.1" "ghcr.io/${{ github.repository }}@${DIGEST}"
+          bash scripts/fork/promote-image.sh ghcr.io "${{ github.repository }}" "${DIGEST}"
