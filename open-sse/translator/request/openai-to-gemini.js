@@ -45,8 +45,35 @@ function normalizeGeminiContents(contents) {
   return out;
 }
 
+function containsLocalJSONSchemaRef(value) {
+  if (Array.isArray(value)) return value.some(containsLocalJSONSchemaRef);
+  if (!value || typeof value !== "object") return false;
+  if (typeof value.$ref === "string" && value.$ref.startsWith("#/")) return true;
+  return Object.values(value).some(containsLocalJSONSchemaRef);
+}
+
+// Gemini 3 rejects local JSON Schema pointers in structured function responses.
+// Keep the original content as text only for those responses; ordinary JSON stays parsed.
+export function serializeGeminiToolResult(content) {
+  let parsed;
+  if (typeof content === "string") {
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      return content;
+    }
+  } else {
+    parsed = content;
+  }
+
+  if (parsed && typeof parsed === "object" && containsLocalJSONSchemaRef(parsed)) {
+    return typeof content === "string" ? content : JSON.stringify(content);
+  }
+  return parsed;
+}
+
 // Core: Convert OpenAI request to Gemini format (base for all variants)
-function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG_SIGNATURE) {
+function openaiToGeminiBase(model, body, _stream, signature = DEFAULT_THINKING_AG_SIGNATURE) {
   const result = {
     model: model,
     contents: [],
@@ -170,8 +197,8 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
                 }
               }
 
-              let resp = toolResponses[fid];
-              let parsedResp = tryParseJSON(resp);
+              const resp = toolResponses[fid];
+              let parsedResp = serializeGeminiToolResult(resp);
               if (parsedResp === null) {
                 parsedResp = { result: resp };
               } else if (typeof parsedResp !== "object") {
@@ -360,7 +387,7 @@ function wrapInCloudCodeEnvelopeForClaude(model, claudeRequest, credentials = nu
               functionResponse: {
                 id: block.tool_use_id,
                 name: resolvedName,
-                response: { result: tryParseJSON(content) || content }
+                response: { result: serializeGeminiToolResult(content) || content }
               }
             });
           }
