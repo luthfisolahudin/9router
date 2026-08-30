@@ -136,4 +136,31 @@ describe("Antigravity executor", () => {
     expect(system).not.toContain(ANTIGRAVITY_DEFAULT_SYSTEM);
     expect(system).not.toContain("Please ignore the following [ignore]");
   });
+
+  it("filters out empty content parts caused by reasoning-only assistant turns and merges adjacent turns", () => {
+    const out = new AntigravityExecutor().transformRequest("gemini-3.7-flash-high", {
+      request: {
+        contents: [
+          { role: "user", parts: [{ text: "initial prompt" }] },
+          { role: "model", parts: [{ functionCall: { id: "call_1", name: "bash", args: { command: "ls" } } }] },
+          { role: "user", parts: [{ functionResponse: { id: "call_1", name: "bash", response: { result: "file.txt" } } }] },
+          // Assistant turn that only contained reasoning/thought (stripped by AG executor)
+          { role: "model", parts: [{ thought: true, text: "thinking..." }, { thoughtSignature: "sig", text: "" }] },
+          { role: "user", parts: [{ text: "continue" }] },
+        ],
+      },
+    }, true, { projectId: "project-1", connectionId: "conn-1" });
+
+    const contents = out.request.contents;
+    // Empty model content should be stripped, and adjacent user contents should be merged
+    expect(contents.some((c) => c.parts.length === 0)).toBe(false);
+    expect(contents).toHaveLength(3);
+    expect(contents[0].role).toBe("user");
+    expect(contents[1].role).toBe("model");
+    expect(contents[2].role).toBe("user");
+    // Merged user turn contains both functionResponse and subsequent user text
+    expect(contents[2].parts).toHaveLength(2);
+    expect(contents[2].parts[0]).toMatchObject({ functionResponse: expect.any(Object) });
+    expect(contents[2].parts[1]).toMatchObject({ text: "continue" });
+  });
 });
