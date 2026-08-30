@@ -163,4 +163,32 @@ describe("Antigravity executor", () => {
     expect(contents[2].parts[0]).toMatchObject({ functionResponse: expect.any(Object) });
     expect(contents[2].parts[1]).toMatchObject({ text: "continue" });
   });
+
+  it("normalizes an OpenAI reasoning-only assistant turn through the full request path", () => {
+    const translated = translateRequest(FORMATS.OPENAI, FORMATS.ANTIGRAVITY, "gemini-3.7-flash-high", {
+      messages: [
+        { role: "user", content: "hello" },
+        { role: "assistant", content: "", reasoning_content: "historical reasoning" },
+        { role: "user", content: "ping" },
+      ],
+    }, true, null, "antigravity");
+    const out = new AntigravityExecutor().transformRequest("gemini-3.7-flash-high", translated, true, {
+      projectId: "project-1",
+      connectionId: "conn-1",
+    });
+
+    expect(out.request.contents).toEqual([{
+      role: "user",
+      parts: [{ text: "hello" }, { text: "ping" }],
+    }]);
+  });
+
+  it("rejects a request with no usable content after thought stripping", () => {
+    expect(() => new AntigravityExecutor().transformRequest("gemini-3.7-flash-high", {
+      request: {
+        contents: [{ role: "model", parts: [{ thought: true, text: "thinking" }] }],
+      },
+    }, true, { projectId: "project-1", connectionId: "conn-1" }))
+      .toThrow("no usable content");
+  });
 });
