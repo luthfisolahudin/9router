@@ -263,6 +263,9 @@ export class AntigravityExecutor extends BaseExecutor {
     }
 
     const normalizedContents = contents ? normalizeGeminiContents(contents) : undefined;
+    if (contents && normalizedContents.length === 0) {
+      throw new Error("Antigravity request has no usable content after normalization");
+    }
 
     const transformedRequest = {
       ...requestWithoutTools,
