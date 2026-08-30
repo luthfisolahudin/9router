@@ -7,6 +7,7 @@ import { parseDataUri } from "../concerns/image.js";
 import { extractTextContent } from "../formats/gemini.js";
 import { ROLE, OPENAI_BLOCK, CLAUDE_BLOCK } from "../schema/index.js";
 import { getCapabilitiesForModel } from "../../providers/capabilities.js";
+import { DEFAULT_THINKING_CLAUDE_SIGNATURE } from "../../config/defaultThinkingSignature.js";
 
 // Empty prefix matches real Claude Code behavior (no tool name prefix).
 // Previously "proxy_" was used but this is a detectable fingerprint difference.
@@ -253,6 +254,7 @@ function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
       }
     }
   } else if (msg.role === ROLE.ASSISTANT) {
+    let hasThinking = false;
     if (Array.isArray(msg.content)) {
       for (const part of msg.content) {
         if (part.type === OPENAI_BLOCK.TEXT && part.text) {
@@ -261,6 +263,7 @@ function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
           // Tool name already has prefix from tool declarations, keep as-is
           blocks.push({ type: CLAUDE_BLOCK.TOOL_USE, id: part.id, name: part.name, input: part.input });
         } else if (part.type === CLAUDE_BLOCK.THINKING) {
+          hasThinking = true;
           // Include thinking block but strip cache_control (not allowed on thinking blocks)
           const { cache_control, ...thinkingBlock } = part;
           blocks.push(thinkingBlock);
@@ -271,6 +274,15 @@ function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
       if (text) {
         blocks.push({ type: CLAUDE_BLOCK.TEXT, text });
       }
+    }
+
+    // Map OpenAI reasoning_content to Claude thinking block (placed before text blocks)
+    if (!hasThinking && typeof msg.reasoning_content === "string" && msg.reasoning_content.length > 0) {
+      blocks.unshift({
+        type: CLAUDE_BLOCK.THINKING,
+        thinking: msg.reasoning_content,
+        signature: DEFAULT_THINKING_CLAUDE_SIGNATURE,
+      });
     }
 
     if (msg.tool_calls && Array.isArray(msg.tool_calls)) {
