@@ -5,7 +5,7 @@ import { OAUTH_ENDPOINTS, ANTIGRAVITY_HEADERS, AG_DEFAULT_TOOLS, AG_TOOL_SUFFIX,
 import { HTTP_STATUS } from "../config/runtimeConfig.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
-import { cleanJSONSchemaForAntigravity } from "../translator/formats/gemini.js";
+import { cleanJSONSchemaForAntigravity, normalizeGeminiContents } from "../translator/formats/gemini.js";
 import { DEFAULT_THINKING_AG_SIGNATURE } from "../config/defaultThinkingSignature.js";
 
 // Sanitize function name: Gemini requires [a-zA-Z_][a-zA-Z0-9_.:\-]{0,63}
@@ -262,10 +262,12 @@ export class AntigravityExecutor extends BaseExecutor {
       generationConfig.maxOutputTokens = MAX_ANTIGRAVITY_OUTPUT_TOKENS;
     }
 
+    const normalizedContents = contents ? normalizeGeminiContents(contents) : undefined;
+
     const transformedRequest = {
       ...requestWithoutTools,
       generationConfig,
-      ...(contents && { contents }),
+      ...(normalizedContents && { contents: normalizedContents }),
       ...(tools && { tools }),
       sessionId: body.request?.sessionId || resolveSessionId({ headers: credentials?.rawHeaders, body, connectionId: credentials?.email || credentials?.connectionId, scope: "antigravity" }),
       safetySettings: undefined,
