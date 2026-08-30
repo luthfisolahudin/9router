@@ -416,10 +416,12 @@ export class AntigravityExecutor extends BaseExecutor {
       generationConfig.maxOutputTokens = outputCap;
     }
 
+    const normalizedContents = contents ? normalizeGeminiContents(contents) : undefined;
+
     const transformedRequest = {
       ...requestWithoutTools,
       generationConfig,
-      ...(contents && { contents }),
+      ...(normalizedContents && { contents: normalizedContents }),
       ...(tools && { tools }),
       sessionId,
       safetySettings: undefined,
