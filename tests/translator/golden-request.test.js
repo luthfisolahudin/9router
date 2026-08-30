@@ -27,10 +27,10 @@ function baseBody() {
   };
 }
 
-// Strip dynamic fields: toolNameMap, kiro conversationId (uuid), timestamps in content.
+// Strip dynamic fields: toolNameMap, kiro conversationId / agentContinuationId (uuid), timestamps in content.
 function clean(body) {
   const s = JSON.stringify(body, (k, v) => {
-    if (k === "_toolNameMap" || k === "conversationId") return undefined;
+    if (k === "_toolNameMap" || k === "conversationId" || k === "agentContinuationId") return undefined;
     return v;
   }).replace(/Current time is [^"\\]+/g, "Current time is <TS>");
   return JSON.parse(s);
