@@ -1,3 +1,8 @@
+---
+name: fork-stewardship
+description: "Modes: re-evaluate · fingerprint · playbooks. Keeps the 9router fork's divergences deliberate and minimal: per-sync patch re-evaluation against upstream (keep/drop/consolidate with evidence), Antigravity agy CLI fingerprint freshness runbook, and sync-conflict playbooks (deleted Dockerfile, CLAUDE.md symlink, strict minimumReleaseAge waits). Load when asked whether a fork patch is still needed, to review or update fork patches, when the agy fingerprint may be stale, or alongside sync-upstream on every upstream sync. NOT for the sync/rebase procedure itself (use sync-upstream) or for general code orientation (use AGENTS.md and FORK.md)."
+---
+
 # Skill: Fork Stewardship
 
 **Keep the fork's divergences deliberate, minimal, and alive — or let them die gracefully.**
