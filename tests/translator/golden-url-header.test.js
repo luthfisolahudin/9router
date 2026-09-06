@@ -39,7 +39,11 @@ function sanitize(headers) {
       ? v.replace(/Bearer .+/, "Bearer <TOK>")
           .replace(/sk-test-APIKEY|tok-test-ACCESS/g, "<CRED>")
           .replace(/kimi-\d{10,}/g, "kimi-<TS>")
+          .replace(/9Router\/[\d.]+/g, "9Router/<APP_VERSION>")
       : v;
+    if (k.toLowerCase() === "x-client-version" || k.toLowerCase() === "x-core-version") {
+      out[k] = "<APP_VERSION>";
+    }
   }
   return out;
 }
