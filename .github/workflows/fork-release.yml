@@ -29,22 +29,27 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        # Installs the version pinned in package.json#packageManager.
+
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
+          cache: pnpm
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Set up tests dependencies
-        run: npm --prefix tests install
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
 
       - name: Run Gemini regression tests
-        run: npm --prefix tests run test -- translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+        run: pnpm -C tests exec vitest run translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+
+      - name: Audit production dependencies (high and above fail the release)
+        run: pnpm audit --prod --audit-level high
 
       - name: Build Next.js application
-        run: npm run build
+        run: pnpm run build
 
   build:
     name: Build linux/${{ matrix.arch }} image
@@ -89,7 +94,10 @@ jobs:
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
+          file: ./Containerfile
           platforms: linux/${{ matrix.arch }}
+          build-args: |
+            REVISION=${{ github.sha }}
           outputs: type=image,name=${{ env.GHCR_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=registry,ref=${{ env.GHCR_IMAGE }}:buildcache-${{ matrix.arch }}
           cache-to: type=registry,ref=${{ env.GHCR_IMAGE }}:buildcache-${{ matrix.arch }},mode=max
