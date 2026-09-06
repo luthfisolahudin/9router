@@ -2,6 +2,8 @@
 import { describe, it, expect } from "vitest";
 import { AntigravityExecutor } from "../../open-sse/executors/antigravity.js";
 import antigravity from "../../open-sse/providers/registry/antigravity.js";
+// Import the fingerprint constant so a fingerprint refresh only touches shared.js.
+import { ANTIGRAVITY_IDE_USER_AGENT } from "../../open-sse/providers/shared.js";
 
 const MAX = 10000;
 function res(status, headers = {}, body = null) {
@@ -67,15 +69,15 @@ describe("antigravity computeRetryDelay hook (D3)", () => {
     expect(out.request.tools[0].functionDeclarations.map(fn => fn.name)).toEqual(["read_file"]);
   });
 
-  it("registry uses the daily IDE cloudcode host and user agent", () => {
+  it("registry uses the daily IDE cloudcode host and the live client fingerprint", () => {
     expect(antigravity.transport.baseUrls).toEqual(["https://daily-cloudcode-pa.googleapis.com"]);
-    expect(antigravity.transport.headers["User-Agent"]).toBe("antigravity/ide/2.11.0 darwin/arm64");
+    expect(antigravity.transport.headers["User-Agent"]).toBe(ANTIGRAVITY_IDE_USER_AGENT);
   });
 
-  it("buildHeaders matches official IDE stream headers", () => {
+  it("buildHeaders matches the official client stream headers", () => {
     ag._lastSessionId = "sess-123";
     const h = ag.buildHeaders({ accessToken: "tok" }, true);
-    expect(h["User-Agent"]).toBe("antigravity/ide/2.11.0 darwin/arm64");
+    expect(h["User-Agent"]).toBe(ANTIGRAVITY_IDE_USER_AGENT);
     expect(h["Content-Type"]).toBe("application/json");
     expect(h["Authorization"]).toBe("Bearer tok");
     expect(h).not.toHaveProperty("X-Machine-Session-Id");
