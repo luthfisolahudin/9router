@@ -1,4 +1,4 @@
-name: Fork CI and Image Promotion
+name: Fork Release
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-build-promotion-${{ github.ref }}
+  group: fork-release-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions: {}
@@ -18,9 +18,9 @@ env:
 
 jobs:
   validate:
-    name: Validate Fork Patch & Upstream Build
+    name: Validate (tests + build)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -45,22 +45,6 @@ jobs:
 
       - name: Build Next.js application
         run: npm run build
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-
-      - name: Build candidate Docker image locally
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          load: true
-          tags: 9router:candidate-test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Run container startup smoke test
-        run: |
-          bash scripts/fork/smoke-test.sh 9router:candidate-test 20128
 
   build:
     name: Build linux/${{ matrix.arch }} image
@@ -97,9 +81,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Native per-arch build pushed by digest; merged into one multi-arch
-      # manifest by the merge-promote job. Registry buildcache is persistent
-      # (unlike GHA cache) so arm64 layers never go cold.
+      # Native per-arch build pushed by digest; the release job merges the two
+      # digests into one multi-arch manifest. Registry buildcache is persistent
+      # (unlike the GHA cache) so arm64 layers never go cold.
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
@@ -126,8 +110,8 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  merge-promote:
-    name: Merge Multi-Arch Manifest & Promote
+  release:
+    name: Release (merge manifest, smoke, promote)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -185,10 +169,10 @@ jobs:
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create \
-            --annotation "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
-            --annotation "org.opencontainers.image.revision=${{ github.sha }}" \
-            --annotation "io.9router-fork.upstream-tag=${{ steps.meta-info.outputs.tag_name }}" \
-            --tag "${{ env.GHCR_IMAGE }}:${{ steps.meta-info.outputs.tag_name }}-gemini.1" \
+            --annotation "index:org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+            --annotation "index:org.opencontainers.image.revision=${{ github.sha }}" \
+            --annotation "index:io.9router-fork.upstream-tag=${{ steps.meta-info.outputs.tag_name }}" \
+            --tag "${{ env.GHCR_IMAGE }}:${{ steps.meta-info.outputs.tag_name }}" \
             --tag "${{ env.GHCR_IMAGE }}:sha-${{ steps.meta-info.outputs.short_sha }}" \
             $(printf '${{ env.GHCR_IMAGE }}@sha256:%s ' *)
 
@@ -206,6 +190,6 @@ jobs:
         env:
           DIGEST: ${{ steps.manifest.outputs.digest }}
         run: |
-          echo "Built and pushed image digest: ${DIGEST}"
+          echo "Promoting image digest: ${DIGEST}"
           # Promote image digest to production while preserving old production as production-previous
           bash scripts/fork/promote-image.sh "ghcr.io" "${{ github.repository }}" "${DIGEST}"
