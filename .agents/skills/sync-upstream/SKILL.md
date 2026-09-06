@@ -75,21 +75,32 @@ Load when checking upstream releases, syncing the fork with upstream master/tags
 
 ### 3. verify (regression tests & build)
 
-1. **Install dependencies**:
+The fork uses **pnpm 12 via corepack** (see FORK.md). If upstream moved dependencies, resolution
+honors `minimumReleaseAge` (7 days) — a too-fresh version blocks install; **wait for it to age out
+and re-run** (strict per owner decision — never waive, never extend `minimumReleaseAgeExclude`
+without asking).
+
+1. **Install dependencies** (non-frozen on purpose: resolves upstream's changes and vets them):
    ```bash
-   npm install && npm --prefix tests install
+   pnpm install
    ```
+   If `pnpm-lock.yaml` changed, it must be committed with the sync:
+   `git add pnpm-lock.yaml && git commit -m "chore(sync): refresh pnpm lockfile"`.
 
 2. **Run regression tests**:
-   Execute critical translation and provider regression test suites:
    ```bash
-   npm --prefix tests run test -- translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+   pnpm -C tests exec vitest run translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+   ```
+   For a sync touching translators/providers broadly, run the full suite and diff failures against
+   the pre-existing baseline.
+
+3. **Audit & build**:
+   ```bash
+   pnpm audit --prod --audit-level high   # same gate the release pipeline enforces
+   pnpm run build
    ```
 
-3. **Verify application build**:
-   ```bash
-   npm run build
-   ```
+4. **Re-evaluate fork patches** per the `fork-stewardship` skill before promoting.
 
 ---
 
@@ -123,5 +134,7 @@ Load when checking upstream releases, syncing the fork with upstream master/tags
 ## Invariants
 
 - **Never discard fork-specific patches**: Dynamically inspect fork commits (`upstream/master..HEAD`) — do not assume a hardcoded list.
-- **Fail-closed verification**: Never push without successful test runs and clean build verification.
+- **Fail-closed verification**: Never push without successful test runs, audit, and clean build verification.
 - **Atomic metadata sync**: Keep `.github/fork-metadata.json` consistent with the actual upstream commit synced.
+- **Lockfile discipline**: `pnpm-lock.yaml` is tracked and must be refreshed + committed whenever upstream changes dependencies; release installs are frozen against it.
+- **No upstream PRs**: the fork carries its patches by owner decision (self-contained); drop a patch only when upstream independently ships an equivalent (see `fork-stewardship`).
