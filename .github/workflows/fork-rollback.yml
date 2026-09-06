@@ -22,6 +22,7 @@ env:
 jobs:
   rollback:
     name: Rollback Production Image
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
