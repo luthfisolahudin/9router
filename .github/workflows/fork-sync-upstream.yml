@@ -17,12 +17,15 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
-  packages: write
+  issues: write
+
+env:
+  ISSUE_TITLE_PREFIX: "Manual sync needed:"
 
 jobs:
   check-and-sync:
-    timeout-minutes: 30
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -45,7 +48,7 @@ jobs:
         run: |
           python3 scripts/fork/check-upstream-tag.py --github-output "$GITHUB_OUTPUT"
 
-      - name: Prepare sync branch and PR
+      - name: Prepare sync PR (merge upstream, preserve fork automation)
         id: sync
         if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
         env:
@@ -63,59 +66,46 @@ jobs:
           fi
 
           echo "Target sync tag: ${TARGET_TAG} (${TARGET_COMMIT})"
-          bash scripts/fork/create-sync-pr.sh "${TARGET_TAG}" "${TARGET_COMMIT}" "https://github.com/decolua/9router.git"
+
+          if ! bash scripts/fork/create-sync-pr.sh "${TARGET_TAG}" "${TARGET_COMMIT}" "https://github.com/decolua/9router.git"; then
+            # Only a merge conflict is a handled outcome (fork patches colliding
+            # with upstream changes). Surface it as an issue — a human or agent
+            # resolves it with the sync-upstream skill. Anything else is a real
+            # failure and keeps the red X.
+            CONFLICTED=$(git diff --name-only --diff-filter=U | sed 's/^/- `/' | sed 's/$/`/')
+            if [[ -z "$CONFLICTED" ]]; then
+              echo "Sync script failed without a merge conflict."
+              exit 1
+            fi
+            git merge --abort 2>/dev/null || true
+            BODY=$(printf 'Upstream `%s` (`%s`) cannot be merged automatically. Conflicting files:\n%s\n\nResolve manually: rebase the fork onto the upstream tag, preserving every fork patch (see `FORK.md`), verify tests + build, then push master.' "$TARGET_TAG" "$TARGET_COMMIT" "$CONFLICTED")
+            EXISTING=$(gh issue list --state open --json number,title --jq '[.[] | select(.title | startswith("'"${ISSUE_TITLE_PREFIX}"'")) | .number] | first // empty')
+            if [[ -z "$EXISTING" ]]; then
+              gh issue create --title "${ISSUE_TITLE_PREFIX} upstream ${TARGET_TAG} conflicts with fork patches" --body "$BODY"
+            else
+              gh issue comment "$EXISTING" --body "$BODY"
+            fi
+            echo "handled=conflict" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
       - name: Install dependencies
-        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        if: ${{ steps.sync.outputs.handled != 'conflict' && (steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '') }}
         run: npm install && npm --prefix tests install
 
-      - name: Run Gemini regression tests
-        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+      - name: Run regression tests on merged tree
+        if: ${{ steps.sync.outputs.handled != 'conflict' && (steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '') }}
         run: npm --prefix tests run test -- translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
 
-      - name: Build application
-        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
-        run: npm run build
-
-      - name: Set up Docker Buildx
-        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-
-      - name: Log in to GHCR
-        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push candidate
-        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
-        id: candidate
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: .
-          push: true
-          tags: ghcr.io/${{ github.repository }}:candidate-${{ steps.sync.outputs.candidate_sha }}
-          platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Smoke-test candidate digest
-        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
-        run: bash scripts/fork/smoke-test.sh "ghcr.io/${{ github.repository }}@${{ steps.candidate.outputs.digest }}" 20128
-
-      - name: Merge validated sync PR
-        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+      # Merging the PR pushes master, which triggers Fork Release — the only
+      # pipeline that builds images and promotes them to production.
+      - name: Merge sync PR and close stale conflict issues
+        if: ${{ steps.sync.outputs.handled != 'conflict' && (steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge "$(cat /tmp/fork-sync-pr-number)" --merge --delete-branch
-
-      - name: Publish immutable tags and promote tested digest
-        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
-        env:
-          TARGET_TAG: ${{ github.event.inputs.force_tag || steps.check.outputs.latest_tag }}
-          DIGEST: ${{ steps.candidate.outputs.digest }}
         run: |
-          docker buildx imagetools create --tag "ghcr.io/${{ github.repository }}:${TARGET_TAG}-gemini.1" "ghcr.io/${{ github.repository }}@${DIGEST}"
-          bash scripts/fork/promote-image.sh ghcr.io "${{ github.repository }}" "${DIGEST}"
+          gh pr merge "$(cat /tmp/fork-sync-pr-number)" --merge --delete-branch
+          STALE=$(gh issue list --state open --json number,title --jq '[.[] | select(.title | startswith("'"${ISSUE_TITLE_PREFIX}"'")) | .number] | join(" ")')
+          for n in $STALE; do
+            gh issue close "$n" --comment "Resolved by automated sync; the release pipeline is building the new image."
+          done
