@@ -76,7 +76,7 @@ PR_BODY="Automated upstream sync PR from \`${UPSTREAM_REPO}\` tag \`${TARGET_TAG
 - Preserved all fork GitHub Actions workflows under \`.github/workflows/\`
 - Preserved fork automation scripts under \`scripts/fork/\`
 - Updated \`.github/fork-metadata.json\`
-- CI validation will run regression tests, Docker build, and container smoke test before merge."
+- CI validation runs regression tests before merge; after merge the Fork Release pipeline builds, smoke-tests, and promotes the image."
 
 EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' 2>/dev/null || echo "")
 
