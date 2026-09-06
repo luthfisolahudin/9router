@@ -1,6 +1,7 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for AI coding agents working in this repository. For fork intent and maintenance
+procedures, read `FORK.md` and `.agents/skills/fork-stewardship/SKILL.md` first.
 
 ## What this is
 
@@ -14,38 +15,44 @@ The code lives in `src/` (Next.js app + dashboard/compat APIs), `open-sse/` (the
 
 ## Commands
 
+The fork uses **pnpm 12 via corepack** (pinned in `package.json#packageManager`; corepack ships with
+Node 24). One `pnpm-lock.yaml` covers the root app and `tests/` as a single workspace. Node LTS is
+pinned via `.node-version`. New dependency versions must be ≥7 days old (`minimumReleaseAge` in
+`pnpm-workspace.yaml`) — installs failing on that error are the supply-chain policy working.
+
 Dashboard/gateway (run from repo root):
 ```bash
 cp .env.example .env
-npm install
-PORT=20128 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run dev   # dev (webpack, port 20127 by default via next dev)
-npm run build && PORT=20128 HOSTNAME=0.0.0.0 npm run start           # production
+corepack enable            # once; makes `pnpm` available
+pnpm install --frozen-lockfile
+PORT=20128 NEXT_PUBLIC_BASE_URL=http://localhost:20128 pnpm run dev   # dev (webpack, port 20127 via next dev)
+pnpm run build && PORT=20128 HOSTNAME=0.0.0.0 node custom-server.js --port 20128   # production
 ```
-- Bun variants: `npm run dev:bun` / `build:bun` / `start:bun`.
+- Bun variants exist (`pnpm run dev:bun` / `build:bun` / `start:bun`) but are upstream's path — the fork builds/tests with pnpm.
 - Default runtime port is **20128** (dashboard at `/dashboard`, API at `/v1`).
-- Lint: `npx eslint .` (config `eslint.config.mjs`, extends `eslint-config-next`).
+- Lint: `pnpm exec eslint .` (config `eslint.config.mjs`, extends `eslint-config-next`).
+- Dependency audit (release gate): `pnpm audit --prod --audit-level high`.
 
-CLI package (`cli/`):
+CLI package (`cli/`) stays on npm (upstream's published distribution channel — don't pnpm-ify it):
 ```bash
 npm run cli:pack       # build + npm pack from root
 cd cli && npm run dev  # nodemon watch
 ```
 
-Tests (vitest, in `tests/`, an **independent** ESM package — not wired into root `npm test`):
+Tests (vitest, in `tests/` — a workspace member; one root `pnpm install` covers it):
 ```bash
-npm install                             # ROOT deps first — tests import from src/ which needs `open`, `undici`, etc.
-cd tests && npm install                 # then tests' own deps (vitest) → tests/node_modules (allowed by tests/.gitignore)
-npx vitest run                          # all tests; auto-discovers tests/vitest.config.js
-npx vitest run unit/capabilities.test.js   # single file (path relative to tests/)
+pnpm -C tests exec vitest run                            # all tests; auto-discovers tests/vitest.config.js
+pnpm -C tests exec vitest run unit/capabilities.test.js  # single file (path relative to tests/)
 ```
-> The committed `tests/package.json` `test` script hardcodes Unix paths (`NODE_PATH=/tmp/node_modules …`) — a shared-install workaround from upstream. On Windows (or anywhere), ignore it and use the `npx vitest` form above; `vitest.config.js` resolves the `open-sse`/`@/` aliases from the repo root regardless of where vitest lives.
+> Use the `pnpm -C tests exec vitest` form — the `tests/package.json` `test` script hardcodes
+> upstream's `NODE_PATH=/tmp/node_modules` workaround and should be bypassed.
 >
-> **The suite is NOT expected to be all-green on a plain checkout.** ~938 pass, ~64 fail. Judge regressions with `tests/__baseline__/verify-no-regression.mjs`, not a raw run. Expected red:
-> - 26 catalogued in `tests/__baseline__/known-fails.txt` (rtk, oauth-cursor-auto-import, translator-request-normalization, …).
+> **The suite is NOT expected to be all-green on a plain checkout.** ~2,070 pass, ~115 fail. Judge
+> regressions by diffing the failure list against the known pre-existing baseline (these fail on
+> pure upstream too), not by a raw count. Expected red:
+> - The pre-existing cluster: kiro-direct translator shape, cursor protobuf codec, saml (empty file), db-benchmark, embeddings.cloud, and friends.
 > - `unit/embeddings.cloud.test.js` imports `cloud/src/handlers/embeddings.js` — the `cloud/` worker dir is **not in this repo**, so it always fails here.
-> - `unit/xai-oauth-service.test.js` times out (5s) when the xAI endpoint-discovery fetch isn't reachable/mocked.
 > - `real/*.real.test.js` make live provider calls — need credentials, skip otherwise.
-- `*.real.test.js` under `tests/translator/real/` make live provider calls — skip unless credentials are set.
 - Regression baselines: `tests/__baseline__/verify-*.mjs` compare against committed snapshots (providers, aliases, OAuth URLs). Run these after touching provider registry / alias logic.
 
 ## Architecture
