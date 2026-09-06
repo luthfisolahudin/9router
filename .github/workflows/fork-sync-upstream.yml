@@ -70,7 +70,7 @@ jobs:
 
       - name: Run Gemini regression tests
         if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
-        run: npm --prefix tests exec vitest run --config vitest.config.js translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+        run: npm --prefix tests run test -- translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
 
       - name: Build application
         if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
