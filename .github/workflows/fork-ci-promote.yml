@@ -40,7 +40,7 @@ jobs:
         run: npm --prefix tests install
 
       - name: Run Gemini regression tests
-        run: npm --prefix tests exec vitest run --config vitest.config.js translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+        run: npm --prefix tests run test -- translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
 
       - name: Build Next.js application
         run: npm run build
