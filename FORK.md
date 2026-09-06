@@ -31,6 +31,7 @@ the source of truth for both the sync automation and the release pipeline's imag
 | antigravity | Normalize contents to drop empty reasoning-only turns; reject empty normalized history | Upstream accepted empty reasoning-only turns, which broke the owner's client sessions. |
 | claude | Map assistant `reasoning_content` → Claude thinking blocks; avoid forged thinking signatures | Keeps reasoning streams intact for Claude-protocol clients without fabricating signature blocks. |
 | gemini | Preserve JSON-Schema tool results as text (`serializeGeminiToolResult`) | Gemini 3 rejects local `$ref` pointers in structured function responses. |
+| Dockerfile | Use default registries (Alpine CDN, npmjs) — no CN mirrors | Mirrors are unreliable from GitHub runners (caused repeated build failures); nothing fetches packages at runtime, so they buy nothing here. |
 | tests | Golden `url-header` snapshots normalize app version (`<APP_VERSION>` placeholders) | Version bumps must not break the fork's golden header lock on every sync. |
 | infra | Everything under `.github/workflows/fork-*`, `scripts/fork/`, `.agents/skills/sync-upstream/` | Fork CI/CD and sync automation (see below). Upstream will never ship these. |
 
