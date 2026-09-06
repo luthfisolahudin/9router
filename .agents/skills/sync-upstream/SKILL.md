@@ -83,7 +83,7 @@ Load when checking upstream releases, syncing the fork with upstream master/tags
 2. **Run regression tests**:
    Execute critical translation and provider regression test suites:
    ```bash
-   npm --prefix tests exec vitest run --config vitest.config.js translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+   npm --prefix tests run test -- translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
    ```
 
 3. **Verify application build**:
