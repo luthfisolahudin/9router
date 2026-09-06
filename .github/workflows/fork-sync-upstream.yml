@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   check-and-sync:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
