@@ -101,3 +101,10 @@ graphify-out/*
 .start-dev.ps1
 start-dev-silent.cjs
 debug.log
+
+# agent tooling session artifacts
+.zcode/
+
+# pnpm (project store, if ever configured)
+.pnpm-store/
+
