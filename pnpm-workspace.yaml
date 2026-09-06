@@ -1,0 +1,17 @@
+packages:
+  - tests
+
+# Supply-chain policy: never resolve dependency versions published less than
+# 7 days ago (7 * 24 * 60 minutes). Applies whenever new versions are resolved
+# (fresh lockfile entries, updates, sync installs); frozen installs consume
+# the already-vetted lockfile. Strict per owner decision: if a sync needs a
+# version younger than this, the sync waits until it ages out.
+minimumReleaseAge: 10080
+
+# Lifecycle scripts of dependencies are blocked unless allowed (pnpm security
+# default). pnpm 12 fails the install when a package needing scripts is missing here.
+allowBuilds:
+  # node-gyp build / prebuilt binding for the optional SQLite driver
+  better-sqlite3: true
+  # postinstall resolves the native binary for the config-file resolver used by eslint-config-next
+  unrs-resolver: true
