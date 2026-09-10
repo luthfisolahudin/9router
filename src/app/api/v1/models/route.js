@@ -430,6 +430,11 @@ export async function buildModelsList(kindFilter, options = {}) {
         .filter((modelId) => typeof modelId === "string" && modelId.trim() !== "");
 
       const customModelKindById = new Map();
+      // Custom models can carry explicit capability overrides (the dashboard's
+      // add-model modal stores `caps`). /api/models already applies them; this
+      // OpenAI-compatible surface must too, otherwise a user-corrected vision
+      // flag is dropped on the path every integration actually reads.
+      const customModelCapsById = new Map();
       const customModelIds = customModels
         .filter((m) => {
           if (!m?.id) return false;
@@ -442,7 +447,10 @@ export async function buildModelsList(kindFilter, options = {}) {
         })
         .map((m) => {
           const modelId = String(m.id).trim();
-          if (modelId) customModelKindById.set(modelId, getModelKind(m) || LLM_KIND);
+          if (modelId) {
+            customModelKindById.set(modelId, getModelKind(m) || LLM_KIND);
+            if (m.caps && typeof m.caps === "object") customModelCapsById.set(modelId, m.caps);
+          }
           return modelId;
         })
         .filter((modelId) => modelId !== "");
@@ -491,9 +499,15 @@ export async function buildModelsList(kindFilter, options = {}) {
         // { id, name } — no per-model capability data. Fall back to the same
         // pattern-matched capabilities the dashboard uses (useModelCaps.js) so
         // dynamically-discovered LLM models still surface vision/reasoning/search/tools.
-        const caps = liveCapabilitiesById.get(modelId)
+        const resolvedCaps = liveCapabilitiesById.get(modelId)
           || capabilitiesFromServiceKind(customKind || liveKind)
           || (kind === LLM_KIND ? getCapabilitiesForModel(providerId, modelId) : null);
+        // Explicit per-model overrides win over every heuristic source; they are
+        // the user's authoritative correction when a table/pattern is wrong.
+        const explicitCaps = customModelCapsById.get(modelId);
+        const caps = explicitCaps
+          ? { ...getCapabilitiesForModel(providerId, modelId), ...resolvedCaps, ...explicitCaps }
+          : resolvedCaps;
         if (caps) model.capabilities = caps;
         // Token limits under the snake_case names the OpenAI/OpenRouter
         // convention uses. `capabilities.contextWindow` is camelCase and nested,

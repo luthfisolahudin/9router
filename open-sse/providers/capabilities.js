@@ -217,10 +217,12 @@ export const PROVIDER_CAPABILITIES = {
     "glm-5.3-flash":      { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: true, contextWindow: 1000000, maxOutput: 32000 },
     "kimi-k3-1":          { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: false, contextWindow: 1000000, maxOutput: 32000 },
     "deepseek-v4-pro":    { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: true, contextWindow: 1000000, maxOutput: 50000 },
-    // deepseek-v4.1-flash replaces v4-flash (dropped from the server list;
-    // the old endpoint still answers 200 but the published list is the
-    // contract). maxOutput 128000 per the server's product-config payload.
-    "deepseek-v4.1-flash": { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: true, contextWindow: 1000000, maxOutput: 128000 },
+    // V4.1-Flash is the successor to V4-Flash + V4-Flash-Vision-Exp: native
+    // multimodal (DeepSeek-ViT in the base model), 1M context, 384K output.
+    // Without this exact entry the id falls through to the generic
+    // "*deepseek-v4*" pattern, which has no vision flag and drops image input.
+    "deepseek-v4.1-flash": { vision: true, reasoning: true, thinkingFormat: "openai", thinkingCanDisable: true, contextWindow: 1000000, maxOutput: 384000 },
+
   },
   // Qoder — upstream exposes opaque internal ids (dfmodel, kmodel, …); the
   // registry `name` is display-only and capability lookup matches on the raw
