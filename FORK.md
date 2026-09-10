@@ -28,7 +28,6 @@ the source of truth for both the sync automation and the release pipeline's imag
 
 | Area | Patch | Why it's divergent |
 |---|---|---|
-| antigravity | Exact `agy` CLI client fingerprint + model IDs | Matches the agy CLI the owner actually uses; deliberately **not** the IDE fingerprint upstream sends. Do not "fix" it back. |
 | antigravity | Normalize contents to drop empty reasoning-only turns; reject empty normalized history | Upstream accepted empty reasoning-only turns, which broke the owner's client sessions. |
 | claude | Map assistant `reasoning_content` → Claude thinking blocks; avoid forged thinking signatures | Keeps reasoning streams intact for Claude-protocol clients without fabricating signature blocks. |
 | gemini | Preserve JSON-Schema tool results as text (`serializeGeminiToolResult`) | Gemini 3 rejects local `$ref` pointers in structured function responses. |
