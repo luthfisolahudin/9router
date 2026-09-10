@@ -113,6 +113,19 @@ describe("getCapabilitiesForModel", () => {
       thinkingEffortSupported: true,
     });
   });
+
+  it("reports CodeBuddy CN DeepSeek V4.1 Flash as natively multimodal", () => {
+    // Regression: without an exact codebuddy-cn entry this id fell through to
+    // the generic "*deepseek-v4*" pattern, which has no vision flag — dropping
+    // image input for a model whose base architecture ships DeepSeek-ViT.
+    expect(getCapabilitiesForModel("codebuddy-cn", "deepseek-v4.1-flash")).toMatchObject({
+      vision: true,
+      reasoning: true,
+      thinkingFormat: "openai",
+      contextWindow: 1000000,
+      maxOutput: 384000,
+    });
+  });
 });
 
 describe("getCapabilitiesForModel — MiMo (<think>-tag reasoning, always-on)", () => {
