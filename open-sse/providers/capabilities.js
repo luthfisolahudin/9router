@@ -264,6 +264,14 @@ export const PROVIDER_CAPABILITIES = {
     "mistral-large-4": { vision: true, contextWindow: 1048576 },
     "mistral-large-4-0": { vision: true, contextWindow: 1048576 },
   },
+  "antigravity": {
+    "claude-opus-4-6-thinking": { vision: true, reasoning: true, search: true, thinkingFormat: "gemini-budget", thinkingRange: { min: 1024, max: 63999 }, contextWindow: 200000, maxOutput: 64000 },
+    "claude-sonnet-4-6":        { vision: true, reasoning: true, search: true, thinkingFormat: "gemini-budget", thinkingRange: { min: 1024, max: 63999 }, contextWindow: 200000, maxOutput: 64000 },
+  },
+  "ag": {
+    "claude-opus-4-6-thinking": { vision: true, reasoning: true, search: true, thinkingFormat: "gemini-budget", thinkingRange: { min: 1024, max: 63999 }, contextWindow: 200000, maxOutput: 64000 },
+    "claude-sonnet-4-6":        { vision: true, reasoning: true, search: true, thinkingFormat: "gemini-budget", thinkingRange: { min: 1024, max: 63999 }, contextWindow: 200000, maxOutput: 64000 },
+  },
   // NVIDIA NIM is OpenAI-compatible → rejects MiniMax/GLM native `thinking` field.
   // Force openai reasoning_effort format for its reasoning models. #issue
   "nvidia": {
