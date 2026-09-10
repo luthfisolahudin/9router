@@ -43,21 +43,15 @@ new failures against the pre-existing baseline.
 
 ## 2. Antigravity client fingerprint freshness
 
-The fork pins the live `agy` CLI fingerprint in `open-sse/providers/shared.js`:
+The fork matches the official macOS Antigravity IDE Desktop fingerprint in `open-sse/providers/shared.js`:
 
-- `ANTIGRAVITY_IDE_USER_AGENT` — e.g. `antigravity/cli/1.1.22 (aidev_client; os_type=linux; arch=amd64; cl=971564011; auth_method=consumer)`
-- `ANTIGRAVITY_IDE_VERSION` — the client version used where the API expects it.
+- `ANTIGRAVITY_IDE_USER_AGENT` — `antigravity/ide/2.11.0 darwin/arm64`
+- `ANTIGRAVITY_IDE_VERSION` — `2.11.0`
 
-Upstream pins the **IDE** fingerprint instead; ours matches the CLI the owner actually drives.
-Google updates the CLI regularly; a stale fingerprint can trigger anti-abuse rejections.
-
-**Refresh runbook:**
-1. Get the current fingerprint: run the installed `agy` CLI with a request capture (mitm/proxy) and
-   read its `User-Agent`, or extract from the binary (`strings $(which agy) | grep -m1 "antigravity/cli"`).
-2. Update **only** `open-sse/providers/shared.js` (the tests import the constant — do not edit tests).
-3. Verify: `pnpm -C tests exec vitest run unit/antigravity-retry-hook.test.js unit/antigravity-usage-headers.test.js`
-   then one real request through the deployed router.
-4. Update the FORK.md patch-table row's fingerprint example if the shape changed.
+When upstream bumps the official IDE fingerprint or Google releases a new stable Antigravity IDE version on macOS:
+1. Update `ANTIGRAVITY_IDE_VERSION` and `ANTIGRAVITY_IDE_USER_AGENT` in `open-sse/providers/shared.js`.
+2. Verify: `pnpm -C tests exec vitest run unit/antigravity-retry-hook.test.js unit/antigravity-usage-headers.test.js`
+   and `node tests/__baseline__/verify-providers.mjs`.
 
 ## 3. Keep/drop criteria (decision table)
 
@@ -66,7 +60,7 @@ Google updates the CLI regularly; a stale fingerprint can trigger anti-abuse rej
 | Upstream ships an equivalent and fork tests pass without our patch | DROP the patch (document in sync commit) |
 | Upstream ships a partial equivalent | CONSOLIDATE — rebase our patch onto upstream's shape, shrink the diff |
 | Patch guards against an upstream regression (e.g. forged signatures) | KEEP; re-check every sync |
-| Patch is deliberately divergent (antigravity CLI fingerprint) | KEEP; maintain freshness per §2 |
+| Antigravity client fingerprint | Keep aligned with latest stable macOS Antigravity IDE per §2 |
 | Patch's failure mode no longer occurs and no upstream equivalent exists | KEEP — absence of symptoms is not evidence |
 
 ## 4. Sync-conflict playbooks
