@@ -496,6 +496,10 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         .then((data) => setIdeStatus(data))
         .catch(() => setIdeStatus({ installed: false, path: null }));
     }
+    // Clear any stale callback from a previous attempt before starting the popup.
+    // Leftover entries carry an already-consumed code (different state) that
+    // triggers invalid_grant when the new authData effect reads them on mount.
+    try { localStorage.removeItem("oauth_callback"); } catch { /* ignore */ }
     startOAuthFlowRef.current();
   }, [isOpen, provider]);
 
@@ -580,11 +584,16 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         return;
       }
 
+      // Reject callbacks whose state doesn't match the current flow — stale
+      // localStorage or a concurrent popup would otherwise trigger invalid_grant.
+      if (authData?.state && state && state !== authData.state) return;
+
       if (token || code) {
         callbackProcessedRef.current = true;
         await exchangeTokens(token || code, state);
       }
     };
+
 
     // Method 1: postMessage from popup
     const handleMessage = (event) => {
