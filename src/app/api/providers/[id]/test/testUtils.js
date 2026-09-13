@@ -208,6 +208,10 @@ async function probeCloudCodeAssistAccess(connection, accessToken, effectiveProx
 
   if (res.ok) return { valid: true, error: null };
 
+  // 429 means the token was accepted but the account is quota-exhausted.
+  // Treat as valid so login succeeds; routing will skip this account when exhausted.
+  if (res.status === 429) return { valid: true, error: null, soft: "Quota exhausted — token accepted." };
+
   const bodyText = await res.text().catch(() => "");
   return {
     valid: false,
@@ -215,6 +219,8 @@ async function probeCloudCodeAssistAccess(connection, accessToken, effectiveProx
     status: res.status,
   };
 }
+
+
 
 async function refreshOAuthToken(connection) {
   const provider = connection.provider;
@@ -352,13 +358,13 @@ async function testOAuthConnection(connection, effectiveProxy = null) {
 
   if (connection.provider === "gemini-cli" || connection.provider === "antigravity") {
     const initial = await probeCloudCodeAssistAccess(connection, accessToken, effectiveProxy);
-    if (initial.valid) return { valid: true, error: null, refreshed, newTokens };
+    if (initial.valid) return { valid: true, error: null, warning: initial.soft || null, refreshed, newTokens };
 
     if (initial.status === 401 && config.refreshable && !refreshed && connection.refreshToken) {
       const tokens = await refreshOAuthToken(connection);
       if (tokens?.accessToken) {
         const retry = await probeCloudCodeAssistAccess(connection, tokens.accessToken, effectiveProxy);
-        if (retry.valid) return { valid: true, error: null, refreshed: true, newTokens: tokens };
+        if (retry.valid) return { valid: true, error: null, warning: retry.soft || null, refreshed: true, newTokens: tokens };
         return { valid: false, error: retry.error, refreshed: true, newTokens: tokens };
       }
       return { valid: false, error: "Token invalid or revoked", refreshed: false };
@@ -366,6 +372,7 @@ async function testOAuthConnection(connection, effectiveProxy = null) {
 
     return { valid: false, error: initial.error, refreshed };
   }
+
 
   if (connection.provider === "cline") {
     const tryProbe = async (token) => {
