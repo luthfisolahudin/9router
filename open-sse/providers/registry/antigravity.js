@@ -31,10 +31,16 @@ export default {
       "500": {
         attempts: 3,
       },
+      "502": {
+        attempts: 1,
+        delayMs: 2000,
+      },
       "503": {
         attempts: 3,
       },
     },
+    timeoutMs: 30000,
+
     usage: {
       quotaApiUrl: `${ANTIGRAVITY_IDE_BASE_URL}/v1internal:fetchAvailableModels`,
       quotaSummaryApiUrl: `${ANTIGRAVITY_IDE_BASE_URL}/v1internal:retrieveUserQuotaSummary`,
