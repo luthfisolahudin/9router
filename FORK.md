@@ -34,9 +34,11 @@ the source of truth for both the sync automation and the release pipeline's imag
 | Dockerfile | Use default registries (Alpine CDN, npmjs) — no CN mirrors | Mirrors are unreliable from GitHub runners (caused repeated build failures); nothing fetches packages at runtime, so they buy nothing here. |
 | Containerfile | Fork-owned build file on `node:24-slim` (upstream's `Dockerfile` is deleted) | glibc base for prebuilt native bindings, corepack/pnpm, reproducible frozen installs, HEALTHCHECK, OCI labels. Upstream Dockerfile changes conflict as modify/delete → `git rm Dockerfile` and port meaningful fixes by hand. |
 
-**Patch verdicts, re-evaluated against upstream v0.5.69 (2026-09-06): every behavior patch above is
+**Patch verdicts, re-evaluated against upstream v0.5.75 (2026-09-13): every behavior patch above is
 still necessary — none has an upstream equivalent.** Re-run this evaluation every sync per the
 `fork-stewardship` skill; drop a patch only on verified upstream equivalence.
+
+
 
 ## Toolchain (fork-owned)
 
