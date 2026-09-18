@@ -1,8 +1,8 @@
 {
   "upstream_repo": "https://github.com/decolua/9router.git",
-  "base_tag": "v0.5.75",
-  "base_commit": "17c4cc76877bd1755030a8414f8d0083f48dcccf",
-  "synced_tag": "v0.5.75",
-  "synced_commit": "17c4cc76877bd1755030a8414f8d0083f48dcccf",
-  "last_sync_utc": "2026-09-13T02:25:00Z"
+  "base_tag": "v0.5.81",
+  "base_commit": "a8c9d3802c5933500fba95416f5bf0c130581396",
+  "synced_tag": "v0.5.81",
+  "synced_commit": "a8c9d3802c5933500fba95416f5bf0c130581396",
+  "last_sync_utc": "2026-09-19T00:42:00Z"
 }
