@@ -46,7 +46,10 @@ describe("Antigravity Claude Opus 4.6 (200k context & High thinking effort)", ()
 
     expect(translated.model).toBe("claude-opus-4-6-thinking(high)");
     expect(translated.userAgent).toBe("antigravity");
-    expect(translated.requestType).toBe("agent");
+    // `requestType` is intentionally absent on the agent (chat) path: the official
+    // Antigravity client omits it, and sending it triggers a false 429
+    // RESOURCE_EXHAUSTED (upstream v0.5.85). Locked here so it cannot creep back.
+    expect(translated.requestType).toBeUndefined();
 
     const genConfig = translated.request.generationConfig;
     expect(genConfig.maxOutputTokens).toBe(64000);
