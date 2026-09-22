@@ -1,6 +1,9 @@
 ---
 name: 9router-stt
-description: Speech-to-text via 9Router /v1/audio/transcriptions using OpenAI Whisper / Groq / Gemini / Deepgram / AssemblyAI / NVIDIA / HuggingFace models. Use when the user wants to transcribe audio, convert speech to text, or get subtitles from audio files.
+description: >-
+  Speech-to-text via 9Router /v1/audio/transcriptions using OpenAI Whisper / Groq / Gemini /
+  Deepgram / AssemblyAI / NVIDIA / HuggingFace models. Use when the user wants to transcribe audio,
+  convert speech to text, or get subtitles from audio files.
 ---
 
 # 9Router — Speech-to-Text
