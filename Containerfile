@@ -36,9 +36,11 @@ ENV NODE_ENV=production \
     DATA_DIR=/app/data
 
 ARG REVISION=local
+ARG APP_VERSION=unknown
 LABEL org.opencontainers.image.title="9router" \
       org.opencontainers.image.source="https://github.com/luthfisolahudin/9router" \
       org.opencontainers.image.revision="${REVISION}" \
+      org.opencontainers.image.version="${APP_VERSION}" \
       org.opencontainers.image.base.name="docker.io/library/node:24-slim"
 
 # gosu drops privileges to `node` after fixing volume ownership on boot
