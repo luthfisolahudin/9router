@@ -86,6 +86,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Read app version
+        id: ver
+        run: |
+          V=$(node -p "require('./package.json').version")
+          echo "value=$V" >> "$GITHUB_OUTPUT"
+
       # Native per-arch build pushed by digest; the release job merges the two
       # digests into one multi-arch manifest. Registry buildcache is persistent
       # (unlike the GHA cache) so arm64 layers never go cold.
@@ -98,6 +104,7 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           build-args: |
             REVISION=${{ github.sha }}
+            APP_VERSION=${{ steps.ver.outputs.value }}
           outputs: type=image,name=${{ env.GHCR_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=registry,ref=${{ env.GHCR_IMAGE }}:buildcache-${{ matrix.arch }}
           cache-to: type=registry,ref=${{ env.GHCR_IMAGE }}:buildcache-${{ matrix.arch }},mode=max
