@@ -1,6 +1,9 @@
 ---
 name: 9router-tts
-description: Text-to-speech via 9Router /v1/audio/speech using OpenAI / ElevenLabs / Deepgram / Edge TTS / Google TTS / Hyperbolic / Inworld voices. Use when the user wants to convert text to speech, generate audio, voiceover, narrate, or read text aloud.
+description: >-
+  Text-to-speech via 9Router /v1/audio/speech using OpenAI / ElevenLabs / Deepgram / Edge TTS /
+  Google TTS / Hyperbolic / Inworld voices. Use when the user wants to convert text to speech,
+  generate audio, voiceover, narrate, or read text aloud.
 ---
 
 # 9Router — Text-to-Speech

@@ -1,6 +1,9 @@
 ---
 name: 9router-chat
-description: Chat / code generation via 9Router using OpenAI /v1/chat/completions or Anthropic /v1/messages format with streaming + auto-fallback combos. Use when the user wants to ask an LLM, generate code, summarize text, or run prompts through 9Router.
+description: >-
+  Chat / code generation via 9Router using OpenAI /v1/chat/completions or Anthropic /v1/messages
+  format with streaming + auto-fallback combos. Use when the user wants to ask an LLM, generate
+  code, summarize text, or run prompts through 9Router.
 ---
 
 # 9Router — Chat
