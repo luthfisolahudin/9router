@@ -40,6 +40,9 @@ function sanitize(headers) {
           .replace(/sk-test-APIKEY|tok-test-ACCESS/g, "<CRED>")
           .replace(/kimi-\d{10,}/g, "kimi-<TS>")
           .replace(/9Router\/[\d.]+/g, "9Router/<APP_VERSION>")
+          // App version, whatever the header name: `X-Msh-Version` (kimi) carries the
+          // package version verbatim, so an upstream bump must not break this lock.
+          .replace(/^\d+\.\d+\.\d+(?:[-+][\w.]+)?$/, "<APP_VERSION>")
       : v;
     if (k.toLowerCase() === "x-client-version" || k.toLowerCase() === "x-core-version") {
       out[k] = "<APP_VERSION>";
