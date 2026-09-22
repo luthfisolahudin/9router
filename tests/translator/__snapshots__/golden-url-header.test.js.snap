@@ -292,7 +292,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > claude → headers (
     "X-Stainless-Helper-Method": "stream",
     "X-Stainless-Lang": "js",
     "X-Stainless-Os": "MacOS",
-    "X-Stainless-Package-Version": "0.80.0",
+    "X-Stainless-Package-Version": "<APP_VERSION>",
     "X-Stainless-Retry-Count": "0",
     "X-Stainless-Runtime": "node",
     "X-Stainless-Runtime-Version": "v24.14.0",
@@ -310,7 +310,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > claude → headers (
     "X-Stainless-Helper-Method": "stream",
     "X-Stainless-Lang": "js",
     "X-Stainless-Os": "MacOS",
-    "X-Stainless-Package-Version": "0.80.0",
+    "X-Stainless-Package-Version": "<APP_VERSION>",
     "X-Stainless-Retry-Count": "0",
     "X-Stainless-Runtime": "node",
     "X-Stainless-Runtime-Version": "v24.14.0",
@@ -330,7 +330,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > claude → headers (
     "X-Stainless-Helper-Method": "stream",
     "X-Stainless-Lang": "js",
     "X-Stainless-Os": "MacOS",
-    "X-Stainless-Package-Version": "0.80.0",
+    "X-Stainless-Package-Version": "<APP_VERSION>",
     "X-Stainless-Retry-Count": "0",
     "X-Stainless-Runtime": "node",
     "X-Stainless-Runtime-Version": "v24.14.0",
@@ -709,14 +709,14 @@ exports[`GOLDEN buildHeaders (default executor providers) > grok-cli → headers
     "Content-Type": "application/json",
     "User-Agent": "grok-shell/0.2.99 (linux; x86_64)",
     "x-grok-client-identifier": "grok-shell",
-    "x-grok-client-version": "0.2.99",
+    "x-grok-client-version": "<APP_VERSION>",
   },
   "nonStream": {
     "Authorization": "Bearer <TOK>",
     "Content-Type": "application/json",
     "User-Agent": "grok-shell/0.2.99 (linux; x86_64)",
     "x-grok-client-identifier": "grok-shell",
-    "x-grok-client-version": "0.2.99",
+    "x-grok-client-version": "<APP_VERSION>",
   },
   "oauth": {
     "Accept": "text/event-stream",
@@ -724,7 +724,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > grok-cli → headers
     "Content-Type": "application/json",
     "User-Agent": "grok-shell/0.2.99 (linux; x86_64)",
     "x-grok-client-identifier": "grok-shell",
-    "x-grok-client-version": "0.2.99",
+    "x-grok-client-version": "<APP_VERSION>",
   },
 }
 `;
@@ -838,7 +838,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > kimi → headers (ap
     "X-Msh-Device-Model": "Linux x64",
     "X-Msh-Device-Name": "thunk",
     "X-Msh-Platform": "9router",
-    "X-Msh-Version": "0.5.81",
+    "X-Msh-Version": "<APP_VERSION>",
     "x-api-key": "<CRED>",
   },
   "nonStream": {
@@ -849,7 +849,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > kimi → headers (ap
     "X-Msh-Device-Model": "Linux x64",
     "X-Msh-Device-Name": "thunk",
     "X-Msh-Platform": "9router",
-    "X-Msh-Version": "0.5.81",
+    "X-Msh-Version": "<APP_VERSION>",
     "x-api-key": "<CRED>",
   },
   "oauth": {
@@ -861,7 +861,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > kimi → headers (ap
     "X-Msh-Device-Model": "Linux x64",
     "X-Msh-Device-Name": "thunk",
     "X-Msh-Platform": "9router",
-    "X-Msh-Version": "0.5.81",
+    "X-Msh-Version": "<APP_VERSION>",
     "x-api-key": "<CRED>",
   },
 }
@@ -1088,6 +1088,25 @@ exports[`GOLDEN buildHeaders (default executor providers) > openai → headers (
 }
 `;
 
+exports[`GOLDEN buildHeaders (default executor providers) > opencode-zen → headers (apiKey / oauth) 1`] = `
+{
+  "apiKey": {
+    "Accept": "text/event-stream",
+    "Authorization": "Bearer <TOK>",
+    "Content-Type": "application/json",
+  },
+  "nonStream": {
+    "Authorization": "Bearer <TOK>",
+    "Content-Type": "application/json",
+  },
+  "oauth": {
+    "Accept": "text/event-stream",
+    "Authorization": "Bearer <TOK>",
+    "Content-Type": "application/json",
+  },
+}
+`;
+
 exports[`GOLDEN buildHeaders (default executor providers) > openrouter → headers (apiKey / oauth) 1`] = `
 {
   "apiKey": {
@@ -1152,6 +1171,25 @@ exports[`GOLDEN buildHeaders (default executor providers) > perplexity-agent →
 `;
 
 exports[`GOLDEN buildHeaders (default executor providers) > poolside → headers (apiKey / oauth) 1`] = `
+{
+  "apiKey": {
+    "Accept": "text/event-stream",
+    "Authorization": "Bearer <TOK>",
+    "Content-Type": "application/json",
+  },
+  "nonStream": {
+    "Authorization": "Bearer <TOK>",
+    "Content-Type": "application/json",
+  },
+  "oauth": {
+    "Accept": "text/event-stream",
+    "Authorization": "Bearer <TOK>",
+    "Content-Type": "application/json",
+  },
+}
+`;
+
+exports[`GOLDEN buildHeaders (default executor providers) > qoder-cn → headers (apiKey / oauth) 1`] = `
 {
   "apiKey": {
     "Accept": "text/event-stream",
@@ -1711,6 +1749,13 @@ exports[`GOLDEN buildUrl (default executor providers) > openai → url (stream +
 }
 `;
 
+exports[`GOLDEN buildUrl (default executor providers) > opencode-zen → url (stream + non-stream) 1`] = `
+{
+  "nonStream": "https://opencode.ai/zen/v1/chat/completions",
+  "stream": "https://opencode.ai/zen/v1/chat/completions",
+}
+`;
+
 exports[`GOLDEN buildUrl (default executor providers) > openrouter → url (stream + non-stream) 1`] = `
 {
   "nonStream": "https://openrouter.ai/api/v1/chat/completions",
@@ -1736,6 +1781,13 @@ exports[`GOLDEN buildUrl (default executor providers) > poolside → url (stream
 {
   "nonStream": "https://inference.poolside.ai/v1/chat/completions",
   "stream": "https://inference.poolside.ai/v1/chat/completions",
+}
+`;
+
+exports[`GOLDEN buildUrl (default executor providers) > qoder-cn → url (stream + non-stream) 1`] = `
+{
+  "nonStream": "https://gateway.qoder.com.cn/algo/api/v2/service/pro/sse/agent_chat_generation",
+  "stream": "https://gateway.qoder.com.cn/algo/api/v2/service/pro/sse/agent_chat_generation",
 }
 `;
 
