@@ -1,6 +1,10 @@
 ---
 name: sync-upstream
-description: Modes: assess · rebase · verify · promote. Standard workflow to inspect upstream releases, audit blast radius on fork-specific patches, rebase cleanly, run regression tests, and promote builds for 9router. Load when asked to check upstream, sync/update fork, resolve upstream conflicts, or verify new releases.
+description: >-
+  Modes: assess · rebase · verify · promote. Standard workflow to inspect upstream releases, audit
+  blast radius on fork-specific patches, rebase cleanly, run regression tests, and promote builds
+  for 9router. Load when asked to check upstream, sync/update fork, resolve upstream conflicts, or
+  verify new releases.
 ---
 
 # Sync Upstream
