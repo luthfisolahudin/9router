@@ -1,6 +1,9 @@
 ---
 name: 9router-video
-description: Generate videos via 9Router /v1/videos/generations using xAI Grok Imagine (grok-imagine-video). Async job flow - submit, poll request_id until done, download MP4. Use when the user wants to create, generate, or render a video, text-to-video (txt2vid), or image-to-video.
+description: >-
+  Generate videos via 9Router /v1/videos/generations using xAI Grok Imagine (grok-imagine-video).
+  Async job flow - submit, poll request_id until done, download MP4. Use when the user wants to
+  create, generate, or render a video, text-to-video (txt2vid), or image-to-video.
 ---
 
 # 9Router — Video Generation (xAI Grok Imagine)
