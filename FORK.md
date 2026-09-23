@@ -34,13 +34,14 @@ the source of truth for both the sync automation and the release pipeline's imag
 | Dockerfile | Use default registries (Alpine CDN, npmjs) — no CN mirrors | Mirrors are unreliable from GitHub runners (caused repeated build failures); nothing fetches packages at runtime, so they buy nothing here. |
 | Containerfile | Fork-owned build file on `node:24-slim` (upstream's `Dockerfile` is deleted) | glibc base for prebuilt native bindings, corepack/pnpm, reproducible frozen installs, HEALTHCHECK, OCI labels. Upstream Dockerfile changes conflict as modify/delete → `git rm Dockerfile` and port meaningful fixes by hand. |
 
-**Patch verdicts, re-evaluated against upstream v0.5.85 (2026-09-22): every behavior patch above is
+**Patch verdicts, re-evaluated against upstream v0.5.86 (2026-09-23): every behavior patch above is
 still necessary — none has an upstream equivalent.** Notable near-misses examined this sync:
-upstream 5798b308 also fights Antigravity false-429s, but by dropping `requestType: "agent"` from
-the chat envelope — that is orthogonal to our two antigravity patches (empty reasoning-only turn
-normalization / empty-history rejection), which remain KEEP. Upstream's `Dockerfile` apk-mirror
-swap is Alpine-only and its "no full distribution upgrade" fix is already the Containerfile's
-behavior; only its `image.version` build arg was portable and has been ported. Re-run this
+upstream cbffeb97 adds Claude Opus 5.5 (additive registry entry, orthogonal) and bumps
+`CLAUDE_CLI_VERSION` 2.1.258 → 2.1.280 (test/snapshot follow-ups only, no patch overlap);
+910db749 (xiaomi-mimo server-assisted login, preview-flatten removal) and 6af26a9e (proxy-pools
+lossless headers) touch no fork-patched files. Upstream also ships stale version-pinned
+expectations of its own (cloaking/header tests, const-guard 429=6 vs source 3) — those fail on pure
+upstream too and were left as-is apart from the fork's follow-up bump. Re-run this
 evaluation every sync per the `fork-stewardship` skill; drop a patch only on verified upstream
 equivalence.
 
