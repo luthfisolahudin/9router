@@ -42,10 +42,8 @@ Tests (vitest, in `tests/` — a workspace member; one root `pnpm install` cover
 pnpm -C tests exec vitest run                            # all tests; auto-discovers tests/vitest.config.js
 pnpm -C tests exec vitest run unit/capabilities.test.js  # single file (path relative to tests/)
 ```
-> Use the `pnpm -C tests exec vitest` form — the `tests/package.json` `test` script hardcodes
-> upstream's `NODE_PATH=/tmp/node_modules` workaround and should be bypassed. The same form replaces
-> the `cd app && npx vitest` commands in upstream's `tests/translator/AGENTS.md`
-> (`pnpm -C tests exec vitest run translator/`).
+> The `pnpm -C tests exec vitest` form replaces the `cd app && npx vitest` commands in upstream's
+> `tests/translator/AGENTS.md` (`pnpm -C tests exec vitest run translator/`).
 >
 > The suite is red on a plain checkout; these failures occur on pure upstream too. Expected red:
 > - The pre-existing cluster: kiro-direct translator shape, cursor protobuf codec, saml (empty file), db-benchmark, embeddings.cloud, and friends.
