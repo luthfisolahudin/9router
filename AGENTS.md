@@ -23,7 +23,7 @@ Dashboard/gateway (run from repo root):
 cp .env.example .env
 corepack enable            # once; makes `pnpm` available
 pnpm install --frozen-lockfile
-PORT=20128 NEXT_PUBLIC_BASE_URL=http://localhost:20128 pnpm run dev   # dev (webpack, port 20127 via next dev)
+PORT=20128 NEXT_PUBLIC_BASE_URL=http://localhost:20128 pnpm run dev   # next dev on port 20127 (the script pins --port); webpack via dev:webpack
 pnpm run build && PORT=20128 HOSTNAME=0.0.0.0 node custom-server.js --port 20128   # production
 ```
 - Bun variants exist (`pnpm run dev:bun` / `build:bun` / `start:bun`) but are upstream's path — the fork builds/tests with pnpm.
@@ -43,14 +43,14 @@ pnpm -C tests exec vitest run                            # all tests; auto-disco
 pnpm -C tests exec vitest run unit/capabilities.test.js  # single file (path relative to tests/)
 ```
 > Use the `pnpm -C tests exec vitest` form — the `tests/package.json` `test` script hardcodes
-> upstream's `NODE_PATH=/tmp/node_modules` workaround and should be bypassed.
+> upstream's `NODE_PATH=/tmp/node_modules` workaround and should be bypassed. The same form replaces
+> the `cd app && npx vitest` commands in upstream's `tests/translator/AGENTS.md`
+> (`pnpm -C tests exec vitest run translator/`).
 >
-> **The suite is NOT expected to be all-green on a plain checkout.** ~2,070 pass, ~115 fail. Judge
-> regressions by diffing the failure list against the known pre-existing baseline (these fail on
-> pure upstream too), not by a raw count. Expected red:
+> The suite is red on a plain checkout; these failures occur on pure upstream too. Expected red:
 > - The pre-existing cluster: kiro-direct translator shape, cursor protobuf codec, saml (empty file), db-benchmark, embeddings.cloud, and friends.
 > - `unit/embeddings.cloud.test.js` imports `cloud/src/handlers/embeddings.js` — the `cloud/` worker dir is **not in this repo**, so it always fails here.
-> - `real/*.real.test.js` make live provider calls — need credentials, skip otherwise.
+> - `translator/real/*.real.test.js` make live provider calls — need credentials, skip otherwise.
 - Regression baselines: `tests/__baseline__/verify-*.mjs` compare against committed snapshots (providers, aliases, OAuth URLs). Run these after touching provider registry / alias logic.
 
 ## Architecture
