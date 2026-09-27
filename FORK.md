@@ -28,22 +28,34 @@ the source of truth for both the sync automation and the release pipeline's imag
 
 | Area | Patch | Why it's divergent |
 |---|---|---|
-| antigravity | Normalize contents to drop empty reasoning-only turns; reject empty normalized history | Upstream accepted empty reasoning-only turns, which broke the owner's client sessions. |
-| claude | Map assistant `reasoning_content` → Claude thinking blocks; avoid forged thinking signatures | Keeps reasoning streams intact for Claude-protocol clients without fabricating signature blocks. |
+| antigravity | Normalize contents to drop empty reasoning-only turns; reject empty normalized history | Upstream accepted empty reasoning-only turns, which broke the owner's client sessions. Upstream adopted the empty-part filter into `normalizeGeminiContents` but still does **not** wire normalization into the Antigravity executor — the fork's executor call + empty-history rejection is what stays divergent. |
 | gemini | Preserve JSON-Schema tool results as text (`serializeGeminiToolResult`) | Gemini 3 rejects local `$ref` pointers in structured function responses. |
 | Dockerfile | Use default registries (Alpine CDN, npmjs) — no CN mirrors | Mirrors are unreliable from GitHub runners (caused repeated build failures); nothing fetches packages at runtime, so they buy nothing here. |
 | Containerfile | Fork-owned build file on `node:24-slim` (upstream's `Dockerfile` is deleted) | glibc base for prebuilt native bindings, corepack/pnpm, reproducible frozen installs, HEALTHCHECK, OCI labels. Upstream Dockerfile changes conflict as modify/delete → `git rm Dockerfile` and port meaningful fixes by hand. |
 
-**Patch verdicts, re-evaluated against upstream v0.5.86 (2026-09-23): every behavior patch above is
-still necessary — none has an upstream equivalent.** Notable near-misses examined this sync:
-upstream cbffeb97 adds Claude Opus 5.5 (additive registry entry, orthogonal) and bumps
-`CLAUDE_CLI_VERSION` 2.1.258 → 2.1.280 (test/snapshot follow-ups only, no patch overlap);
-910db749 (xiaomi-mimo server-assisted login, preview-flatten removal) and 6af26a9e (proxy-pools
-lossless headers) touch no fork-patched files. Upstream also ships stale version-pinned
-expectations of its own (cloaking/header tests, const-guard 429=6 vs source 3) — those fail on pure
-upstream too and were left as-is apart from the fork's follow-up bump. Re-run this
-evaluation every sync per the `fork-stewardship` skill; drop a patch only on verified upstream
-equivalence.
+**Patch verdicts, re-evaluated against upstream v0.5.91 (2026-09-26):** the antigravity, gemini,
+Dockerfile, and Containerfile behavior patches remain necessary — no upstream equivalent. **Two
+divergences consolidated away this sync** (both verified byte-identical to upstream, fork tests green):
+
+- **claude `reasoning_content` → thinking / forged signatures — DROPPED (upstream-equivalent).**
+  `open-sse/translator/request/openai-to-claude.js` is now byte-identical to upstream: the fork's own
+  `e487f180` mapping was already reverted by its `1e350cf2`, so no source divergence survived, and the
+  fork's "does not forge a signed thinking block" test passes on stock upstream code.
+- **antigravity agy/IDE fingerprint — DROPPED (upstream-equivalent).** Upstream independently ships
+  `ANTIGRAVITY_IDE_VERSION = "2.11.0"` and the same `antigravity/ide/…` UA (`70f15aa5`); the fork's
+  3c998a43 reverted the intermediate `antigravity/cli/1.1.22` experiment to exactly that shape, so
+  `open-sse/providers/shared.js` is byte-identical to upstream.
+
+Notable near-misses examined this sync (all KEEP): upstream `30464bc2` extends
+`normalizeGeminiContents` with terminal-turn/functionCall guards — additive, the fork's executor
+wiring is untouched; `2aa99d9f` adds the `isOpenCodeAlias` family fallback in `providerModels.js` —
+kept alongside the fork's `toAlias()` id→alias normalization (upstream still lacks it, and the
+antigravity Opus 4.6 patch needs it: `getModelUpstreamId("antigravity", …)` only resolves via the
+`ag` alias); new providers (tokenharbor, dahl/atria/agnes/bai, opencode-go catalog) are additive
+registry entries touching no fork patch. Upstream also ships stale pinned expectations of its own
+(codex `0.154.0` header pin, codebuddy `deepseek-v4.1-flash` maxOutput 128000 vs the fork's 384000)
+— those fail on pure upstream too and were left as-is. Re-run this evaluation every sync per the
+`fork-stewardship` skill; drop a patch only on verified upstream equivalence.
 
 
 
