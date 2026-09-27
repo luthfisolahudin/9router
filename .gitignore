@@ -105,6 +105,7 @@ debug.log
 
 # agent tooling session artifacts
 .zcode/
+.pi/
 
 # pnpm (project store, if ever configured)
 .pnpm-store/
