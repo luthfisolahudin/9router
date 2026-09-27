@@ -142,3 +142,4 @@ without asking).
 - **Atomic metadata sync**: Keep `.github/fork-metadata.json` consistent with the actual upstream commit synced.
 - **Lockfile discipline**: `pnpm-lock.yaml` is tracked and must be refreshed + committed whenever upstream changes dependencies; release installs are frozen against it.
 - **No upstream PRs**: the fork carries its patches by owner decision (self-contained); drop a patch only when upstream independently ships an equivalent (see `fork-stewardship`).
+- **No AI commit trailers**: never add `Co-Authored-By` / `Co-authored-by` (Claude, Copilot, Cursor, …) to sync or any other commit — the owner authors the history. See `AGENTS.md` > Commit attribution.
