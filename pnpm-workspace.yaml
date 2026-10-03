@@ -13,5 +13,23 @@ minimumReleaseAge: 10080
 allowBuilds:
   # node-gyp build / prebuilt binding for the optional SQLite driver
   better-sqlite3: true
+  esbuild: set this to true or false
   # postinstall resolves the native binary for the config-file resolver used by eslint-config-next
   unrs-resolver: true
+
+
+minimumReleaseAgeExclude:
+  - "@next/env"
+  - "@next/swc-darwin-arm64"
+  - "@next/swc-darwin-x64"
+  - "@next/swc-linux-arm64-gnu"
+  - "@next/swc-linux-arm64-musl"
+  - "@next/swc-linux-x64-gnu"
+  - "@next/swc-linux-x64-musl"
+  - "@next/swc-win32-arm64-msvc"
+  - "@next/swc-win32-x64-msvc"
+  - "next"
+
+audit:
+  ignore:
+    - "GHSA-86w9-cpqp-85rv"

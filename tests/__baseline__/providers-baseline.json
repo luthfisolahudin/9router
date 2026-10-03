@@ -38,10 +38,15 @@
       "500": {
         "attempts": 3
       },
+      "502": {
+        "attempts": 1,
+        "delayMs": 2000
+      },
       "503": {
         "attempts": 3
       }
     },
+    "timeoutMs": 30000,
     "usage": {
       "quotaApiUrl": "https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels",
       "quotaSummaryApiUrl": "https://daily-cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary",
