@@ -1,5 +1,7 @@
 packages:
   - tests
+  - cli
+  - cli
 
 # Supply-chain policy: never resolve dependency versions published less than
 # 7 days ago (7 * 24 * 60 minutes). Applies whenever new versions are resolved
@@ -13,22 +15,20 @@ minimumReleaseAge: 10080
 allowBuilds:
   # node-gyp build / prebuilt binding for the optional SQLite driver
   better-sqlite3: true
-  esbuild: set this to true or false
-  # postinstall resolves the native binary for the config-file resolver used by eslint-config-next
+  esbuild: true
   unrs-resolver: true
 
-
 minimumReleaseAgeExclude:
-  - "@next/env"
-  - "@next/swc-darwin-arm64"
-  - "@next/swc-darwin-x64"
-  - "@next/swc-linux-arm64-gnu"
-  - "@next/swc-linux-arm64-musl"
-  - "@next/swc-linux-x64-gnu"
-  - "@next/swc-linux-x64-musl"
-  - "@next/swc-win32-arm64-msvc"
-  - "@next/swc-win32-x64-msvc"
-  - "next"
+  - "@next/env@16.3.8"
+  - "@next/swc-darwin-arm64@16.3.8"
+  - "@next/swc-darwin-x64@16.3.8"
+  - "@next/swc-linux-arm64-gnu@16.3.8"
+  - "@next/swc-linux-arm64-musl@16.3.8"
+  - "@next/swc-linux-x64-gnu@16.3.8"
+  - "@next/swc-linux-x64-musl@16.3.8"
+  - "@next/swc-win32-arm64-msvc@16.3.8"
+  - "@next/swc-win32-x64-msvc@16.3.8"
+  - "next@16.3.8"
 
 audit:
   ignore:
