@@ -31,10 +31,10 @@ pnpm run build && PORT=20128 HOSTNAME=0.0.0.0 node custom-server.js --port 20128
 - Lint: `pnpm exec eslint .` (config `eslint.config.mjs`, extends `eslint-config-next`).
 - Dependency audit (release gate): `pnpm audit --prod --audit-level high`.
 
-CLI package (`cli/`) stays on npm (upstream's published distribution channel — don't pnpm-ify it):
+CLI package (`cli/`) is managed via the pnpm workspace:
 ```bash
-npm run cli:pack       # build + npm pack from root
-cd cli && npm run dev  # nodemon watch
+pnpm run cli:pack      # build + npm pack from root
+cd cli && pnpm run dev # nodemon watch
 ```
 
 Tests (vitest, in `tests/` — a workspace member; one root `pnpm install` covers it):
