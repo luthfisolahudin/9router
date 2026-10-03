@@ -1,7 +1,6 @@
 packages:
   - tests
   - cli
-  - cli
 
 # Supply-chain policy: never resolve dependency versions published less than
 # 7 days ago (7 * 24 * 60 minutes). Applies whenever new versions are resolved
