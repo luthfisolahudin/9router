@@ -38,10 +38,15 @@
       "500": {
         "attempts": 3
       },
+      "502": {
+        "attempts": 1,
+        "delayMs": 2000
+      },
       "503": {
         "attempts": 3
       }
     },
+    "timeoutMs": 30000,
     "usage": {
       "quotaApiUrl": "https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels",
       "quotaSummaryApiUrl": "https://daily-cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary",
@@ -201,11 +206,11 @@
     "baseUrl": "https://chatgpt.com/backend-api/codex/responses",
     "format": "openai-responses",
     "forceStream": true,
-    "cliVersion": "0.155.0",
+    "cliVersion": "0.159.0",
     "headers": {
       "originator": "codex_cli_rs",
-      "User-Agent": "codex_cli_rs/0.155.0",
-      "version": "0.155.0"
+      "User-Agent": "codex_cli_rs/0.159.0",
+      "version": "0.159.0"
     },
     "usage": {
       "url": "https://chatgpt.com/backend-api/wham/usage",
