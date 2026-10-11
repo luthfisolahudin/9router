@@ -106,6 +106,19 @@ def main():
 
     has_update = (latest["tag"] != current_synced_tag) or (latest["commit"] != current_synced_commit)
 
+    # Guard against a backwards "update": the fork can legitimately sit ahead of
+    # the newest upstream *tag* because upstream does not tag every release (e.g.
+    # v0.5.99 shipped as a tip commit with no v0.5.99 tag). A tag-only comparison
+    # would then flag the older tag as an update and schedule a sync that reverts
+    # the fork's metadata to it, on a loop. Treat a semver-newer synced tag as
+    # already-current. (Tracking untagged tip commits is a separate policy call.)
+    if has_update and current_synced_tag:
+        synced_match = STABLE_SEMVER_PATTERN.match(current_synced_tag)
+        latest_match = STABLE_SEMVER_PATTERN.match(latest["tag"])
+        if synced_match and latest_match:
+            if tuple(map(int, synced_match.groups())) > tuple(map(int, latest_match.groups())):
+                has_update = False
+
     result = {
         "latest_tag": latest["tag"],
         "latest_commit": latest["commit"],
