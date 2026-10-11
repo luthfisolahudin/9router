@@ -21,6 +21,10 @@ const SPECIALIZED = new Set([
   "codex", "cursor", "vertex", "vertex-partner", "opencode",
   "opencode-go", "grok-web", "perplexity-web", "ollama-local", "commandcode",
   "xiaomi-tokenplan", "mimo-free",
+  // v0.5.99 additions with dedicated executors (locked by their own unit tests):
+  // BedrockExecutor.buildHeaders needs AWS config (throws under DefaultExecutor),
+  // and MinimaxCodeExecutor emits a random X-Mavis-Session-Id per call.
+  "bedrock", "bedrock-xai", "minimax-code", "minimax-code-global",
 ]);
 
 // Per-process / per-request values: kimi's random device name, minimax's session UUID.

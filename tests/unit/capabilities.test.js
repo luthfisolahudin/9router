@@ -118,12 +118,14 @@ describe("getCapabilitiesForModel", () => {
     // Regression: without an exact codebuddy-cn entry this id fell through to
     // the generic "*deepseek-v4*" pattern, which has no vision flag — dropping
     // image input for a model whose base architecture ships DeepSeek-ViT.
+    // v0.5.99: upstream's 2026-09-30 catalog sync raised maxOutput to 393216
+    // (matching deepseek-v4-pro) and now ships vision: true itself.
     expect(getCapabilitiesForModel("codebuddy-cn", "deepseek-v4.1-flash")).toMatchObject({
       vision: true,
       reasoning: true,
       thinkingFormat: "openai",
       contextWindow: 1000000,
-      maxOutput: 384000,
+      maxOutput: 393216,
     });
   });
 });
