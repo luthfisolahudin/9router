@@ -10,7 +10,8 @@ packages:
 minimumReleaseAge: 10080
 
 # Lifecycle scripts of dependencies are blocked unless allowed (pnpm security
-# default). pnpm 12 fails the install when a package needing scripts is missing here.
+# default). pnpm 12 fails the install when a package needing scripts is missing
+# here.
 allowBuilds:
   # node-gyp build / prebuilt binding for the optional SQLite driver
   better-sqlite3: true
@@ -28,6 +29,16 @@ minimumReleaseAgeExclude:
   - "@next/swc-win32-arm64-msvc@16.3.8"
   - "@next/swc-win32-x64-msvc@16.3.8"
   - "next@16.3.8"
+
+# Security patches for transitive advisories that neither next@16.3.8 nor
+# postcss@8.5.x pulls in yet. Both target versions are past the 7-day age gate
+# and keep the same major as the range already resolved:
+#   sharp         0.35.4 -> 0.35.5  (GHSA-wq5f-xc86-pv6w, librsvg CVE)
+#   source-map-js 1.2.1  -> 1.2.2   (GHSA-68fv-2mgg-jv7q, DoS)
+# Remove an entry once upstream's own range resolves the patched version.
+overrides:
+  sharp@>=0.34.0 <0.35.5: 0.35.5
+  source-map-js@<1.2.2: 1.2.2
 
 audit:
   ignore:
