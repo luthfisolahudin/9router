@@ -48,11 +48,11 @@ describe("compressWithHeadroom openai-responses format (#1998)", () => {
     expect(typeof body.input[0].content).not.toBe("string");
   });
 
-  it("skips Responses tool/reasoning history instead of collapsing it into a message (#2132)", async () => {
+  it("compresses only plain-text tool outputs in Responses history (#2132)", async () => {
     global.fetch = vi.fn(async () => ({
       ok: true,
       json: async () => ({
-        messages: [{ role: "user", content: "compressed tool history" }],
+        messages: [{ role: "tool", tool_call_id: "headroom-tool-0", content: "ok (compressed)" }],
         tokens_saved: 10,
       }),
     }));
@@ -72,7 +72,7 @@ describe("compressWithHeadroom openai-responses format (#1998)", () => {
       {
         type: "function_call_output",
         call_id: "call_apply_patch_123",
-        output: "ok",
+        output: "step 1 done, step 2 done, step 3 done — no issues found",
       },
       {
         type: "reasoning",
@@ -99,9 +99,24 @@ describe("compressWithHeadroom openai-responses format (#1998)", () => {
       diagnostics,
     });
 
-    expect(data).toBeNull();
-    expect(global.fetch).not.toHaveBeenCalled();
-    expect(body.input).toEqual(input);
-    expect(diagnostics.reason).toBe("skipped: openai-responses tool/reasoning input is not safe to compress");
+    // Protocol items are sent to the proxy as a tool-output-only projection...
+    expect(data).not.toBeNull();
+    expect(global.fetch).toHaveBeenCalledOnce();
+    const payload = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(payload.messages).toEqual([
+      {
+        role: "tool",
+        tool_call_id: "headroom-tool-0",
+        content: "step 1 done, step 2 done, step 3 done — no issues found",
+      },
+    ]);
+
+    // ...and only the plain-text leaf is replaced; the Responses contract holds.
+    expect(body.input).toHaveLength(input.length);
+    expect(body.input[0]).toEqual(input[0]);
+    expect(body.input[1]).toEqual(input[1]);
+    expect(body.input[2]).toMatchObject({ type: "function_call_output", output: "ok (compressed)" });
+    expect(body.input[3]).toEqual(input[3]);
+    expect(diagnostics.reason).toBeUndefined();
   });
 });
