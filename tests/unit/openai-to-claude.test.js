@@ -194,7 +194,12 @@ describe("openaiToClaudeResponse", () => {
     };
 
     const result = openaiToClaudeResponse(chunk, state);
-    const inputDelta = result.find(event => event.delta?.type === "input_json_delta");
+    // Arguments are buffered and sanitized until the finish chunk arrives.
+    const finished = openaiToClaudeResponse(
+      { id: "chatcmpl-test", choices: [{ delta: {}, finish_reason: "tool_calls" }] },
+      state,
+    );
+    const inputDelta = [...result, ...finished].find(event => event.delta?.type === "input_json_delta");
 
     expect(inputDelta).toBeDefined();
     expect(JSON.parse(inputDelta.delta.partial_json)).toEqual({

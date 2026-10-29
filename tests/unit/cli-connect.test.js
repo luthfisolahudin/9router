@@ -194,10 +194,13 @@ describe("connect run()", () => {
   beforeEach(() => {
     home = fs.mkdtempSync(path.join(os.tmpdir(), "9r-connect-run-"));
     vi.spyOn(os, "homedir").mockReturnValue(home);
+    // Tools that prefer XDG must not fall through to the real user config dir.
+    vi.stubEnv("XDG_CONFIG_HOME", "");
     vi.spyOn(console, "log").mockImplementation(() => {});
   });
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
     fs.rmSync(home, { recursive: true, force: true });
   });
 

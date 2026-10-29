@@ -53,7 +53,14 @@ export function filterToOpenAIFormat(body, opts = {}) {
       if (filteredContent.length === 0) {
         filteredContent.push({ type: OPENAI_BLOCK.TEXT, text: "" });
       }
-      
+
+      // Text-only turns are flattened to a string for legacy OpenAI-compatible
+      // servers (Ollama and friends); keep arrays when a non-text block or a
+      // cache_control marker must survive.
+      if (!keepCache && filteredContent.every((block) => block.type === OPENAI_BLOCK.TEXT)) {
+        return { ...msg, content: filteredContent.map((block) => block.text ?? "").join("\n") };
+      }
+
       return { ...msg, content: filteredContent };
     }
     
