@@ -28,7 +28,7 @@ const LEGACY_SYSTRAY_PKG = "systray";
 // step re-derives this repo from the literal below and refuses to upload
 // anywhere else, so the integrity gate can't drift from what clients fetch.
 //
-// The asset is built by .github/workflows/tray-binaries.yml on a macos-15 runner.
+// The asset is built by .github/workflows/tray-binaries.yaml on a macos-15 runner.
 // cgo compiles AppKit against the runner's SDK, so this value tracks that image:
 // when GitHub updates it the sha changes, the workflow refuses to publish, and
 // this constant must be bumped in the same change as the re-upload.

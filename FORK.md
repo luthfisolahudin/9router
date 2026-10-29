@@ -100,20 +100,20 @@ upstream equivalence.
 
 ## Pipelines (one job each, no overlap)
 
-1. **`fork-release.yml` — the only path to production.**
+1. **`fork-release.yaml` — the only path to production.**
    `validate` (pnpm frozen install, regression tests, prod-dependency audit, `npm run build` via
    pnpm) → `build` (native amd64 on `ubuntu-latest`, native arm64 on `ubuntu-24.04-arm`, built from
    `Containerfile`, pushed by digest, persistent registry buildcache per arch) → `release` (merge
    digests into one multi-arch manifest, smoke-test that exact digest, promote it to `production`
    while backing up the old one as `production-previous`).
    Runs on every push to master and on `workflow_dispatch`. PRs run `validate` only.
-2. **`fork-sync-upstream.yml` — upstream awareness, zero image building.**
+2. **`fork-sync-upstream.yaml` — upstream awareness, zero image building.**
    Daily (`17 3 * * *`) it checks upstream for a new stable semver tag
    (`scripts/fork/check-upstream-tag.py`). Clean sync → opens a sync PR, runs regression tests on
    the merged tree, auto-merges it (the merge push triggers Fork Release). Conflicted sync →
    opens/updates a `Manual sync needed:` issue with the conflicting files, instead of failing with a
    bare red X; the issue auto-closes once a later sync succeeds.
-3. **`fork-rollback.yml` — manual retag only.**
+3. **`fork-rollback.yaml` — manual retag only.**
    Point `production` back at `production-previous` (or any digest). No rebuild.
 
 Image tags: `<upstream_tag>` (e.g. `v0.5.69`) and `sha-<8 chars>` are immutable; `production` /

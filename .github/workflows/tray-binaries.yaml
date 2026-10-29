@@ -151,7 +151,7 @@ jobs:
             echo "Release 'tray-binaries' does not exist yet — creating it"
             gh release create tray-binaries --latest=false \
               --title "Native macOS tray binaries" \
-              --notes "Built by .github/workflows/tray-binaries.yml. Provenance and the pinned sha256 live in that workflow and in cli/hooks/trayRuntime.js (ARM64_TRAY_SHA256)."
+              --notes "Built by .github/workflows/tray-binaries.yaml. Provenance and the pinned sha256 live in that workflow and in cli/hooks/trayRuntime.js (ARM64_TRAY_SHA256)."
           fi
 
           gh release upload tray-binaries cli/.tray-build/tray_darwin_arm64 --clobber
