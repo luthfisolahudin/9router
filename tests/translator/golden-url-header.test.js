@@ -27,8 +27,16 @@ const SPECIALIZED = new Set([
   "bedrock", "bedrock-xai", "minimax-code", "minimax-code-global",
 ]);
 
-// Per-process / per-request values: kimi's random device name, minimax's session UUID.
-const VOLATILE_HEADERS = new Set(["x-msh-device-name", "x-mavis-session-id"]);
+// Per-process / per-request values: kimi's random device name, minimax's session UUID,
+// codebuddy's per-call conversation/request UUIDs.
+const VOLATILE_HEADERS = new Set([
+  "x-msh-device-name",
+  "x-mavis-session-id",
+  "x-conversation-id",
+  "x-conversation-message-id",
+  "x-conversation-request-id",
+  "x-request-id",
+]);
 
 // Sanitize header: khử token + field thời gian động (kimi X-Msh-Device-Id) để snapshot ổn định.
 function sanitize(headers) {

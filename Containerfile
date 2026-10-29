@@ -45,8 +45,9 @@ LABEL org.opencontainers.image.title="9router" \
 
 # gosu drops privileges to `node` after fixing volume ownership on boot
 # (the mounted /app/data may be created by root on the host).
+# ffmpeg backs the Codex OAuth STT path (audio conversion), matching upstream's runner.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends gosu \
+ && apt-get install -y --no-install-recommends gosu ffmpeg \
  && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /app/data /app/data-home \
  && chown -R node:node /app /app/data-home \
@@ -70,6 +71,12 @@ COPY --from=builder --chown=node:node /app/node_modules/next ./node_modules/next
 COPY --from=builder --chown=node:node /app/node_modules/sql.js ./node_modules/sql.js
 # node-machine-id is createRequire-loaded at runtime; tracing omits it.
 COPY --from=builder --chown=node:node /app/node_modules/node-machine-id ./node_modules/node-machine-id
+# wreq-js + playwright-core are lazy-loaded at runtime via createRequire and are
+# omitted by Next tracing (upstream issue #5245). wreq-js resolves its native
+# binding from the @wreq-js scope.
+COPY --from=builder --chown=node:node /app/node_modules/wreq-js ./node_modules/wreq-js
+COPY --from=builder --chown=node:node /app/node_modules/playwright-core ./node_modules/playwright-core
+COPY --from=builder --chown=node:node /app/node_modules/@wreq-js ./node_modules/@wreq-js
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||20128)+'/api/version').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"

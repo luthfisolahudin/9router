@@ -18,7 +18,8 @@ description: >-
 
 - Before or during any upstream sync (pairs with the `sync-upstream` skill).
 - When asked whether a fork patch is still needed ("is X still required?", "why do we patch Y?").
-- When the Antigravity/`agy` client fingerprint may be stale (upstream rejected requests, quota/anti-abuse errors, or after the agy CLI updates).
+- When upstream's Antigravity client fingerprint changes, or requests show anti-abuse/quota errors
+  that suggest a stale UA.
 - Periodically (every few upstream tags) as a standing health check.
 
 ## The one rule
@@ -37,7 +38,7 @@ Run this for each patch in the inventory (see FORK.md for the charter-level WHY)
    `git grep <marker> upstream/master -- <files the patch touches>`
    (e.g. `git grep reasoning_content upstream/master -- open-sse/translator/request/openai-to-claude.js`,
    `git grep serializeGeminiToolResult upstream/master -- open-sse/translator/request/openai-to-gemini.js`,
-   `git grep "antigravity/cli" upstream/master -- open-sse/providers/shared.js`).
+   `git grep "antigravity/hub" upstream/master -- open-sse/providers/shared.js`).
 3. Check upstream commits touching the same files since the last sync:
    `git log <last-synced-tag>..upstream/master --oneline -- <patched files>`.
 4. Verdict per patch: **KEEP** (no upstream equivalent) / **DROP** (upstream equivalent exists AND
@@ -50,21 +51,21 @@ new failures against the pre-existing baseline.
 
 ## 2. Antigravity client fingerprint freshness
 
-The fork pins the live `agy` CLI fingerprint in `open-sse/providers/shared.js`:
+**Upstream owns this constant now.** `open-sse/providers/shared.js` (`ANTIGRAVITY_IDE_VERSION` /
+`ANTIGRAVITY_IDE_USER_AGENT`) is byte-identical to upstream — currently
+`antigravity/hub/2.24.0 darwin/arm64`, which upstream ships to fix Gemini 4 Argon 404s. The fork's
+older experiments (`antigravity/ide/2.11.0`, `antigravity/cli/1.1.22 …`) were dropped because
+upstream now tracks the current official client itself.
 
-- `ANTIGRAVITY_IDE_USER_AGENT` — e.g. `antigravity/cli/1.1.22 (aidev_client; os_type=linux; arch=amd64; cl=971564011; auth_method=consumer)`
-- `ANTIGRAVITY_IDE_VERSION` — the client version used where the API expects it.
+**Do not reintroduce a fork-side fingerprint override.** On each sync, compare
+`git diff upstream/master -- open-sse/providers/shared.js` (and
+`git grep "antigravity/" upstream/master -- open-sse/providers/shared.js`). If upstream bumps the
+client, take upstream's value and update the fork's antigravity tests only if they hardcode the UA
+(prefer asserting via the shared constant). Only go back to a fork-owned override with evidence that
+upstream's fingerprint is being rejected (anti-abuse / 404s) and note it in FORK.md.
 
-Upstream pins the **IDE** fingerprint instead; ours matches the CLI the owner actually drives.
-Google updates the CLI regularly; a stale fingerprint can trigger anti-abuse rejections.
-
-**Refresh runbook:**
-1. Get the current fingerprint: run the installed `agy` CLI with a request capture (mitm/proxy) and
-   read its `User-Agent`, or extract from the binary (`strings $(which agy) | grep -m1 "antigravity/cli"`).
-2. Update **only** `open-sse/providers/shared.js` (the tests import the constant — do not edit tests).
-3. Verify: `pnpm -C tests exec vitest run unit/antigravity-retry-hook.test.js unit/antigravity-usage-headers.test.js`
-   then one real request through the deployed router.
-4. Update the FORK.md patch-table row's fingerprint example if the shape changed.
+Verify after any change: `pnpm -C tests exec vitest run unit/antigravity-retry-hook.test.js unit/antigravity-usage-headers.test.js`
+plus one real request through the deployed router.
 
 ## 3. Keep/drop criteria (decision table)
 
@@ -73,7 +74,8 @@ Google updates the CLI regularly; a stale fingerprint can trigger anti-abuse rej
 | Upstream ships an equivalent and fork tests pass without our patch | DROP the patch (document in sync commit) |
 | Upstream ships a partial equivalent | CONSOLIDATE — rebase our patch onto upstream's shape, shrink the diff |
 | Patch guards against an upstream regression (e.g. forged signatures) | KEEP; re-check every sync |
-| Patch is deliberately divergent (antigravity CLI fingerprint) | KEEP; maintain freshness per §2 |
+| Patch is deliberately divergent (fork-owned infrastructure) | KEEP; maintain per FORK.md |
+| Antigravity client fingerprint | Upstream-owned; never reintroduce a fork override without evidence (§2) |
 | Patch's failure mode no longer occurs and no upstream equivalent exists | KEEP — absence of symptoms is not evidence |
 
 ## 4. Sync-conflict playbooks
