@@ -23,7 +23,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "confbox": "^0.2.4",
+    "confbox": "^0.3.1",
     "enquirer": "^2.4.1",
     "node-machine-id": "^1.1.12"
   },
@@ -42,7 +42,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.25.12",
+    "esbuild": "^0.28.2",
     "nodemon": "^3.1.14"
   }
 }
