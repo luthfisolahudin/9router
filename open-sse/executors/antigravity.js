@@ -317,15 +317,14 @@ export class AntigravityExecutor extends BaseExecutor {
       generationConfig.maxOutputTokens = MAX_ANTIGRAVITY_OUTPUT_TOKENS;
     }
 
-    const normalizedContents = contents ? normalizeGeminiContents(contents) : undefined;
-    if (contents && normalizedContents.length === 0) {
+    if (contents && contents.length === 0) {
       throw new Error("Antigravity request has no usable content after normalization");
     }
 
     const transformedRequest = {
       ...requestWithoutTools,
       generationConfig,
-      ...(normalizedContents && { contents: normalizedContents }),
+      ...(contents && { contents }),
       ...(tools && { tools }),
       sessionId,
       safetySettings: undefined,

@@ -9,5 +9,6 @@ it("documents OAuth reuse, ffmpeg limits and does not offer unsupported response
   expect(page).toContain('href={`/dashboard/providers/${id}`}');
   const example = readFileSync(new URL("src/app/(dashboard)/dashboard/media-providers/[kind]/[id]/components/SttExampleCard.js", root), "utf8");
   expect(example).toContain('selectedModelObj?.responseFormats');
-  expect(readFileSync(new URL("Dockerfile", root), "utf8").split("AS runner")[1]).toContain("su-exec ffmpeg");
+  // The fork ships Containerfile instead of upstream's Dockerfile.
+  expect(readFileSync(new URL("Containerfile", root), "utf8").split("AS runner")[1]).toContain("ffmpeg");
 });
