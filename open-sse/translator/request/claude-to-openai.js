@@ -68,6 +68,7 @@ export function claudeToOpenAIRequest(model, body, stream, credentials, opts = {
         }
       }
     }
+    flattenTextOnlyContent(result.messages);
   }
 
   // Fix missing tool responses - OpenAI requires every tool_call to have a response.
@@ -105,6 +106,16 @@ export function claudeToOpenAIRequest(model, body, stream, credentials, opts = {
   }
 
   return result;
+}
+
+// OpenAI-compatible servers (Ollama, legacy gateways) expect plain strings for
+// text-only turns; keep the array only when a non-text block (image/tool) exists.
+function flattenTextOnlyContent(messages) {
+  for (const msg of messages) {
+    if (!Array.isArray(msg.content) || msg.content.length === 0) continue;
+    if (!msg.content.every((block) => block?.type === OPENAI_BLOCK.TEXT)) continue;
+    msg.content = msg.content.map((block) => block.text ?? "").join("\n");
+  }
 }
 
 // Fix missing tool responses - add empty responses for tool_calls without responses
