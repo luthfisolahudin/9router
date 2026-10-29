@@ -33,21 +33,19 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
-        # Installs the version pinned in package.json#packageManager. Must run
-        # before setup-node so its `cache: pnpm` can locate the pnpm store.
+      - name: Set up Node.js + pnpm
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          # Node comes from .node-version, pnpm from
+          # package.json#devEngines.packageManager (checksum-verified).
+          # The sync script performs its own installs.
+          install: false
+          cache: true
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: .node-version
-          cache: pnpm
 
       - name: Check upstream stable tag
         id: check
