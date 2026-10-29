@@ -30,7 +30,7 @@ the source of truth for both the sync automation and the release pipeline's imag
 |---|---|---|
 | antigravity | Normalize contents to drop empty reasoning-only turns; reject empty normalized history | Upstream accepted empty reasoning-only turns, which broke the owner's client sessions. Upstream now wires `normalizeGeminiContents(rawContents, model)` into the executor itself; the fork keeps only the "no usable content after normalization" rejection (its duplicate model-less normalize pass was dropped — it would undo upstream's Gemini 4 `functionResponse` ordering). |
 | Dockerfile | Use default registries (Alpine CDN, npmjs) — no CN mirrors | Mirrors are unreliable from GitHub runners (caused repeated build failures); nothing fetches packages at runtime, so they buy nothing here. |
-| Containerfile | Fork-owned build file on `node:24.22.2-slim` (upstream's `Dockerfile` is deleted) | glibc base for prebuilt native bindings, corepack/pnpm, reproducible frozen installs, HEALTHCHECK, OCI labels. Upstream Dockerfile changes conflict as modify/delete → `git rm Dockerfile` and port meaningful fixes by hand (this sync: `ffmpeg` for Codex STT, lazy-runtime `wreq-js`/`playwright-core` bundling). |
+| Containerfile | Fork-owned build file on `node:26.13.0-slim` (upstream's `Dockerfile` is deleted) | glibc base for prebuilt native bindings, pinned pnpm installed with npm (Node 26 has no corepack), reproducible frozen installs, HEALTHCHECK, OCI labels. Upstream Dockerfile changes conflict as modify/delete → `git rm Dockerfile` and port meaningful fixes by hand (this sync: `ffmpeg` for Codex STT, lazy-runtime `wreq-js`/`playwright-core` bundling). |
 | tests | Golden `url-header` snapshots normalize app version (`<APP_VERSION>` placeholders) and per-request UUIDs | Version bumps and random per-call headers must not break the fork's golden header lock on every sync. |
 | infra | Everything under `.github/workflows/fork-*`, `scripts/fork/`, `.agents/skills/sync-upstream/` | Fork CI/CD and sync automation (see below). Upstream will never ship these. |
 
@@ -81,16 +81,20 @@ upstream equivalence.
 
 ## Toolchain (fork-owned)
 
-- **Package manager**: pnpm 12 via **corepack** (`packageManager` field in `package.json`; corepack
-  ships with Node 24). Single `pnpm-lock.yaml` (tracked) covers the root app and `tests/` as one
-  workspace — installs use `--frozen-lockfile` everywhere, so builds are reproducible. The stale,
-  gitignored npm lockfiles are gone.
+- **Package manager**: pnpm 12, pinned in **`package.json#devEngines.packageManager`** with its
+  sha512 hash. mise reads that field as an idiomatic version file (`mise.toml` enables `pnpm` for
+  idiomatic resolution); CI uses **`pnpm/setup`** (reads `devEngines.packageManager` and
+  `.node-version`, caches the store); the image copies `/opt/pnpm` from the official
+  `ghcr.io/pnpm/pnpm` image (tag mirrored from the same field), per pnpm's Docker guide. Node 26
+  no longer bundles corepack, so nothing depends on it. Single `pnpm-lock.yaml` (tracked) covers
+  the root app and `tests/` as one workspace — installs use `--frozen-lockfile` everywhere, so
+  builds are reproducible. The stale, gitignored npm lockfiles are gone.
 - **Supply-chain policy**: `minimumReleaseAge: 10080` (7 days) in `pnpm-workspace.yaml` — new
   dependency versions must be published ≥7 days before they can be resolved. **Strict**: when
   upstream bumps a dep to a too-fresh version, the sync install fails until it ages out — wait and
   re-run; do not waive. Dependency lifecycle scripts run only for the `allowBuilds` allowlist.
-- **Node**: Node 24.22.2 LTS (`.node-version`); CI (`node-version-file`), local, and the
-  container image all match that exact pin.
+- **Node**: Node 26.13.0 LTS (`.node-version`; `.nvmrc` mirrors it); CI (`node-version-file`),
+  local (mise reads the idiomatic version file), and the container image all match that exact pin.
 - **Release audit gate**: `pnpm audit --prod --audit-level high` fails the release on high/critical
   advisories in shipped dependencies.
 

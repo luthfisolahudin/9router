@@ -1,0 +1,6 @@
+# Developer toolchain (https://mise.jdx.dev).
+# Node comes from the idiomatic .node-version file. pnpm has no pin here: mise
+# reads package.json#devEngines.packageManager (name + version + sha512) as an
+# idiomatic version file, verifies the checksum, and installs that exact version.
+[settings]
+idiomatic_version_file_enable_tools = ["node", "pnpm"]
