@@ -1,0 +1,101 @@
+{
+  "description": "Behavior patches the fork must never lose. Each entry is checked after every upstream sync; tests are the focused proof, markers catch a silently dropped patch.",
+  "patches": [
+    {
+      "id": "provider-id-alias",
+      "summary": "Resolve provider ids to UI aliases before model-registry lookups.",
+      "files": ["open-sse/config/providerModels.js"],
+      "markers": ["const toAlias = (aliasOrId) => PROVIDER_ID_TO_ALIAS[aliasOrId] || aliasOrId;"],
+      "tests": [
+        "tests/unit/gemini-36-integration.test.js",
+        "tests/unit/model-routing.test.js",
+        "tests/unit/codex-auto-review-routing.test.js"
+      ]
+    },
+    {
+      "id": "antigravity-empty-normalized-history",
+      "summary": "Reject an Antigravity request whose normalized history has no usable content.",
+      "files": ["open-sse/executors/antigravity.js"],
+      "markers": ["Antigravity request has no usable content after normalization"],
+      "tests": ["tests/translator/bugs-antigravity.test.js"]
+    },
+    {
+      "id": "antigravity-capability-overrides",
+      "summary": "200k context and High default thinking for Claude Opus/Sonnet 4.6, with a 64k envelope fallback.",
+      "files": [
+        "open-sse/providers/capabilities.js",
+        "open-sse/providers/registry/antigravity.js",
+        "open-sse/translator/request/openai-to-gemini.js"
+      ],
+      "markers": [
+        "contextWindow: 200000",
+        "claude-opus-4-6-thinking(high)",
+        "maxOutputTokens: claudeRequest.max_tokens || 64000"
+      ],
+      "tests": [
+        "tests/unit/antigravity-claude-opus.test.js",
+        "tests/unit/capabilities.test.js"
+      ]
+    },
+    {
+      "id": "antigravity-retry-and-timeout",
+      "summary": "Cap Antigravity 502 retries at one and use a 30s connect timeout.",
+      "files": ["open-sse/providers/registry/antigravity.js"],
+      "markers": ["timeoutMs: 30000", "\"502\": {"],
+      "tests": [
+        "tests/unit/antigravity-retry-hook.test.js",
+        "tests/unit/base-executor-retry.test.js"
+      ]
+    },
+    {
+      "id": "antigravity-oauth-429-probe",
+      "summary": "Treat a 429 from the Cloud Code probe as a valid token (quota-exhausted, not revoked).",
+      "files": ["src/app/api/providers/[id]/test/testUtils.js"],
+      "markers": ["Treat as valid so login succeeds"],
+      "tests": [],
+      "manual": "The probe is not exported and needs a mocked OAuth endpoint; covered by the marker check until a seam exists."
+    },
+    {
+      "id": "oauth-callback-state",
+      "summary": "Drop stale OAuth callbacks and reject a callback whose state does not match the current flow.",
+      "files": ["src/shared/components/OAuthModal.js"],
+      "markers": ["removeItem(\"oauth_callback\")", "state !== authData.state"],
+      "tests": [],
+      "manual": "Client-only localStorage/popup guard; this repo has no DOM test harness."
+    },
+    {
+      "id": "models-capability-overrides",
+      "summary": "Honor explicit custom-model caps on the OpenAI-compatible /v1/models surface.",
+      "files": ["src/app/api/v1/models/route.js"],
+      "markers": ["customModelCapsById", "const explicitCaps = customModelCapsById.get(modelId)"],
+      "tests": ["tests/unit/fork-v1-models-custom-caps.test.js"]
+    },
+    {
+      "id": "text-only-flattening",
+      "summary": "Flatten text-only turns for legacy OpenAI-compatible servers, unless cache markers must survive.",
+      "files": [
+        "open-sse/translator/formats/openai.js",
+        "open-sse/translator/request/claude-to-openai.js"
+      ],
+      "markers": [
+        "flattenTextOnlyContent",
+        "filteredContent.every((block) => block.type === OPENAI_BLOCK.TEXT)"
+      ],
+      "tests": [
+        "tests/unit/translator-request-normalization.test.js",
+        "tests/unit/openai-to-claude.test.js",
+        "tests/unit/claude-cache-final-tool-results.test.js"
+      ]
+    },
+    {
+      "id": "usage-api-key-masking",
+      "summary": "Never expose raw API keys as byApiKey object keys in usage stats.",
+      "files": ["src/lib/db/repos/usageRepo.js"],
+      "markers": ["Never expose the raw key", "maskApiKey(e.apiKey)"],
+      "tests": [
+        "tests/unit/security-audit.test.js",
+        "tests/unit/usage-api-key-attribution.test.js"
+      ]
+    }
+  ]
+}
