@@ -18,14 +18,15 @@ The fork uses **pnpm 12**; the exact version lives in `package.json#devEngines.p
 idiomatic version file); CI uses `pnpm/setup`, and the container image copies pnpm from the
 official `ghcr.io/pnpm/pnpm` image (Node 26 no longer bundles corepack). One `pnpm-lock.yaml`
 covers the root app and `tests/` as a single workspace. Node LTS is pinned via `.node-version`
-(mise reads it as an idiomatic version file). New dependency versions must be ≥7 days old
+(mise reads it as an idiomatic version file), and `mise.lock` records the resolved Node/pnpm
+artifacts with per-platform checksums. New dependency versions must be ≥7 days old
 (`minimumReleaseAge` in `pnpm-workspace.yaml`) — installs failing on that error are the
 supply-chain policy working.
 
 Dashboard/gateway (run from repo root):
 ```bash
 cp .env.example .env
-mise install               # once; installs Node (from .node-version) + pnpm
+mise install --locked node pnpm   # once; exact Node/pnpm from mise.lock
 pnpm install --frozen-lockfile
 PORT=20128 NEXT_PUBLIC_BASE_URL=http://localhost:20128 pnpm run dev   # next dev on port 20127 (the script pins --port); webpack via dev:webpack
 pnpm run build && PORT=20128 HOSTNAME=0.0.0.0 node custom-server.js --port 20128   # production

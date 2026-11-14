@@ -11,8 +11,8 @@
 # (https://pnpm.io/docker#adding-pnpm-to-your-own-image). Both bases are Debian,
 # so the copied standalone binary matches. Everything else in the image is
 # resolved from the tracked pnpm-lock.yaml.
-ARG NODE_IMAGE=node:26.13.0-slim
-ARG PNPM_IMAGE=ghcr.io/pnpm/pnpm:12.16.1
+ARG NODE_IMAGE=node:26.13.1-slim
+ARG PNPM_IMAGE=ghcr.io/pnpm/pnpm:12.20.0
 # ─────────────────────────────────────────────────────────────────────────────
 
 ########## pnpm — official standalone binary ##########
