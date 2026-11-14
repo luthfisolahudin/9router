@@ -4,3 +4,5 @@
 # idiomatic version file, verifies the checksum, and installs that exact version.
 [settings]
 idiomatic_version_file_enable_tools = ["node", "pnpm"]
+# Keep mise.lock (versions, URLs, checksums) current and commit it.
+lockfile = true
