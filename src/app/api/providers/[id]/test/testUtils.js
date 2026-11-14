@@ -266,8 +266,6 @@ async function probeCloudCodeAssistAccess(connection, accessToken, effectiveProx
   };
 }
 
-
-
 async function refreshOAuthToken(connection) {
   const provider = connection.provider;
   const refreshToken = connection.refreshToken;
@@ -420,7 +418,6 @@ async function testOAuthConnection(connection, effectiveProxy = null) {
 
     return { valid: false, error: initial.error, refreshed };
   }
-
 
   if (connection.provider === "cline") {
     const tryProbe = async (token) => {
