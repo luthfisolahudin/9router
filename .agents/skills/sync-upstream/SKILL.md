@@ -66,7 +66,9 @@ Load when checking upstream releases, syncing the fork with upstream master/tags
 
 2. **Handle conflicts**:
    - Never drop or silently discard fork-specific patches.
-   - If conflicts arise, inspect the intention of the fork patch and resolve conflicts conservatively.
+   - If `package.json` conflicts, run `node scripts/fork/resolve-package-json.mjs` first; the three-way
+     resolver takes the higher semver and keeps fork-only fields. Review its decisions in the output.
+   - For any other file, inspect the intention of the fork patch and resolve conflicts conservatively.
    - Stage resolved files and continue: `git rebase --continue`.
 
 3. **Confirm patch preservation**:
@@ -79,10 +81,10 @@ Load when checking upstream releases, syncing the fork with upstream master/tags
 
 ### 3. verify (regression tests & build)
 
-The fork uses **pnpm 12 via corepack** (see FORK.md). If upstream moved dependencies, resolution
-honors `minimumReleaseAge` (7 days) — a too-fresh version blocks install; **wait for it to age out
-and re-run** (strict per owner decision — never waive, never extend `minimumReleaseAgeExclude`
-without asking).
+The fork uses **pnpm 12** pinned in `package.json#devEngines.packageManager` (mise locally,
+`pnpm/setup` in CI). If upstream moved dependencies, resolution honors `minimumReleaseAge` (7 days) —
+a too-fresh version blocks install; **wait for it to age out and re-run** (strict per owner decision —
+never waive, never extend `minimumReleaseAgeExclude` without asking).
 
 1. **Install dependencies** (non-frozen on purpose: resolves upstream's changes and vets them):
    ```bash
@@ -91,12 +93,13 @@ without asking).
    If `pnpm-lock.yaml` changed, it must be committed with the sync:
    `git add pnpm-lock.yaml && git commit -m "chore(sync): refresh pnpm lockfile"`.
 
-2. **Run regression tests**:
+2. **Verify fork patches and the full suite**:
    ```bash
-   pnpm -C tests exec vitest run translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+   node scripts/fork/verify-patches.mjs
+   node scripts/fork/test-gate.mjs
    ```
-   For a sync touching translators/providers broadly, run the full suite and diff failures against
-   the pre-existing baseline.
+   The gate absorbs the known upstream-inherited reds in `scripts/fork/known-red.json` and fails on
+   anything else. A stale baseline entry is reported for pruning.
 
 3. **Audit & build**:
    ```bash
