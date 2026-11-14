@@ -64,6 +64,7 @@ function remoteImageMimeType(url) {
 }
 
 // Convert OpenAI content to Gemini parts
+export function convertOpenAIContentToParts(content) {
   const parts = [];
 
   if (typeof content === "string") {
