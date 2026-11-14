@@ -32,6 +32,8 @@ patches by owner decision: **do not open upstream PRs**; the fork is deliberatel
 
 Run this for each patch in the inventory (see FORK.md for the charter-level WHY):
 
+0. Inventory: `node scripts/fork/verify-patches.mjs` confirms every `scripts/fork/patches.json` entry
+   still has its files, markers, and tests. Commit history alone misses a patch a rebase dropped.
 1. List current patches: `git log upstream/master..HEAD --oneline` (ignore `ci(fork)`, `chore(sync)`,
    `test(translator)` housekeeping commits — those are infrastructure, not behavior patches).
 2. For each behavior patch, check whether upstream now ships an equivalent:
@@ -96,7 +98,9 @@ plus one real request through the deployed router.
 
 ## 5. Standing health check (every few upstream tags)
 
-1. Full suite: `pnpm -C tests exec vitest run` — compare failure list against the pre-existing
-   baseline (~120 known fails that also fail on pure upstream). New failures = fork regression.
-2. `pnpm audit --prod --audit-level high` — release gate locally before pushing.
-3. Re-run the re-evaluation in §1 and refresh FORK.md's verdict table if anything changed.
+1. Full suite: `node scripts/fork/test-gate.mjs` — fails only on failures outside
+   `scripts/fork/known-red.json` (22 upstream-inherited fetch-stub reds in six files as of v0.5.119).
+   A baseline entry that starts passing is reported for pruning.
+2. `node scripts/fork/verify-patches.mjs` — every behavior patch still has its files, markers, and tests.
+3. `pnpm audit --prod --audit-level high` — release gate locally before pushing.
+4. Re-run the re-evaluation in §1 and refresh FORK.md's verdict table if anything changed.

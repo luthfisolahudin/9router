@@ -46,14 +46,16 @@ Tests (vitest, in `tests/` — a workspace member; one root `pnpm install` cover
 ```bash
 pnpm -C tests exec vitest run                            # all tests; auto-discovers tests/vitest.config.js
 pnpm -C tests exec vitest run unit/capabilities.test.js  # single file (path relative to tests/)
+node scripts/fork/test-gate.mjs                          # full suite; fails only on new failures
+node scripts/fork/verify-patches.mjs                     # every fork behavior patch still present
 ```
 > The `pnpm -C tests exec vitest` form replaces the `cd app && npx vitest` commands in upstream's
 > `tests/translator/AGENTS.md` (`pnpm -C tests exec vitest run translator/`).
 >
-> The suite is red on a plain checkout; these failures occur on pure upstream too. Expected red:
-> - The pre-existing cluster: kiro-direct translator shape, cursor protobuf codec, saml (empty file), db-benchmark, embeddings.cloud, and friends.
-> - `unit/embeddings.cloud.test.js` imports `cloud/src/handlers/embeddings.js` — the `cloud/` worker dir is **not in this repo**, so it always fails here.
-> - `translator/real/*.real.test.js` make live provider calls — need credentials, skip otherwise.
+> Six files / 22 tests stay red on pure upstream (fetch-stub tests that no longer match the transport).
+> They are enumerated in `scripts/fork/known-red.json`; `test-gate.mjs` absorbs exactly those and fails
+> on anything else. Never add a fork regression to that file. `translator/real/*.real.test.js` make live
+> provider calls and skip without credentials.
 - Regression baselines: `tests/__baseline__/verify-*.mjs` compare against committed snapshots (providers, aliases, OAuth URLs). Run these after touching provider registry / alias logic.
 
 ## Architecture

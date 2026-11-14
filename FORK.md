@@ -18,8 +18,8 @@ wins.** Maintenance procedures live in `.agents/skills/fork-stewardship/SKILL.md
 
 > **Never lose a fork patch.** On every upstream sync, all fork-specific commits and their intent
 > must survive — rebase them onto the new upstream base, resolve conflicts conservatively, run the
-> regression tests and `npm run build`, and only then push. Push is gated on green verification
-> (fail-closed). See `.agents/skills/sync-upstream/SKILL.md` for the full procedure.
+> patch ledger, full-suite gate, and `pnpm run build`, and only then push. Push is gated on green
+> verification (fail-closed). See `.agents/skills/sync-upstream/SKILL.md` for the full procedure.
 
 `.github/fork-metadata.json` records the upstream tag/commit this fork is currently synced to. It is
 the source of truth for both the sync automation and the release pipeline's image tags.
@@ -78,7 +78,30 @@ upstream equivalence.
 > suppresses that; switching the checker to track upstream **tip commits** rather than tags is a
 > deliberate, still-open policy decision (it would need a stability signal).
 
+## Divergence machinery (fork-owned)
 
+The table above stays the charter-level why; `scripts/fork/patches.json` is the machine-checked
+per-patch inventory (files, code markers, focused tests).
+
+- **`scripts/fork/merge-package-json.mjs`** — three-way `package.json` merge. Dependency maps pick the
+  higher semver; `devEngines` and fork-edited scripts stay; upstream owns metadata like `version`.
+  **`resolve-package-json.mjs`** applies it to an in-progress merge/rebase conflict (git swaps
+  ours/theirs during rebase) and stages the result. The sync workflow calls it automatically; locally,
+  run it after a conflict.
+- **`scripts/fork/patches.json` + `verify-patches.mjs`** — the patch ledger. Every behavior patch lists
+  its files, code markers, and focused tests; the script fails if a marker or test disappears. Two
+  client-only OAuth guards are marker-only and say so in the manifest.
+- **`scripts/fork/test-gate.mjs` + `known-red.json`** — runs the full suite and absorbs exactly the 22
+  upstream-inherited fetch-stub failures in six files. Any other failure fails the gate; a baseline
+  entry that starts passing is reported so it can be pruned.
+- **`scripts/fork/setup-git.sh`** — enables `rerere` and `zdiff3` in a local clone.
+
+```bash
+bash scripts/fork/setup-git.sh                  # once per clone
+node scripts/fork/resolve-package-json.mjs      # after a package.json conflict
+node scripts/fork/verify-patches.mjs            # after a sync
+mise exec -- node scripts/fork/test-gate.mjs    # full suite + baseline
+```
 
 ## Toolchain (fork-owned)
 
@@ -104,18 +127,18 @@ upstream equivalence.
 ## Pipelines (one job each, no overlap)
 
 1. **`fork-release.yaml` — the only path to production.**
-   `validate` (pnpm frozen install, regression tests, prod-dependency audit, `npm run build` via
-   pnpm) → `build` (native amd64 on `ubuntu-latest`, native arm64 on `ubuntu-24.04-arm`, built from
-   `Containerfile`, pushed by digest, persistent registry buildcache per arch) → `release` (merge
-   digests into one multi-arch manifest, smoke-test that exact digest, promote it to `production`
-   while backing up the old one as `production-previous`).
+   `validate` (pnpm frozen install, fork patch ledger, full-suite known-red gate, lint, prod-dependency
+   audit, `pnpm run build`) → `build` (native amd64 on `ubuntu-latest`, native arm64 on
+   `ubuntu-24.04-arm`, built from `Containerfile`, pushed by digest, persistent registry buildcache per
+   arch) → `release` (merge digests into one multi-arch manifest, smoke-test that exact digest, promote
+   it to `production` while backing up the old one as `production-previous`).
    Runs on every push to master and on `workflow_dispatch`. PRs run `validate` only.
 2. **`fork-sync-upstream.yaml` — upstream awareness, zero image building.**
    Daily (`17 3 * * *`) it checks upstream for a new stable semver tag
-   (`scripts/fork/check-upstream-tag.py`). Clean sync → opens a sync PR, runs regression tests on
-   the merged tree, auto-merges it (the merge push triggers Fork Release). Conflicted sync →
-   opens/updates a `Manual sync needed:` issue with the conflicting files, instead of failing with a
-   bare red X; the issue auto-closes once a later sync succeeds.
+   (`scripts/fork/check-upstream-tag.py`). Clean sync → opens a sync PR, runs the patch ledger, full
+   suite, and build on the merged tree, auto-merges it (the merge push triggers Fork Release).
+   Conflicted sync → fails with the conflicting files in the run summary and an error annotation
+   (this repo keeps issues disabled).
 3. **`fork-rollback.yaml` — manual retag only.**
    Point `production` back at `production-previous` (or any digest). No rebuild.
 
