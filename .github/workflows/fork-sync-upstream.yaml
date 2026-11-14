@@ -94,6 +94,10 @@ jobs:
         if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
         run: pnpm install
 
+      - name: Install ffmpeg for STT tests
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
       - name: Verify fork patch ledger
         if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
         run: node scripts/fork/verify-patches.mjs
