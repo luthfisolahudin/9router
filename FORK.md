@@ -30,26 +30,20 @@ the source of truth for both the sync automation and the release pipeline's imag
 |---|---|---|
 | antigravity | Normalize contents to drop empty reasoning-only turns; reject empty normalized history | Upstream accepted empty reasoning-only turns, which broke the owner's client sessions. Upstream now wires `normalizeGeminiContents(rawContents, model)` into the executor itself; the fork keeps only the "no usable content after normalization" rejection (its duplicate model-less normalize pass was dropped — it would undo upstream's Gemini 4 `functionResponse` ordering). |
 | Dockerfile | Use default registries (Alpine CDN, npmjs) — no CN mirrors | Mirrors are unreliable from GitHub runners (caused repeated build failures); nothing fetches packages at runtime, so they buy nothing here. |
-| Containerfile | Fork-owned build file on `node:26.13.0-slim` (upstream's `Dockerfile` is deleted) | glibc base for prebuilt native bindings, pinned pnpm installed with npm (Node 26 has no corepack), reproducible frozen installs, HEALTHCHECK, OCI labels. Upstream Dockerfile changes conflict as modify/delete → `git rm Dockerfile` and port meaningful fixes by hand (this sync: `ffmpeg` for Codex STT, lazy-runtime `wreq-js`/`playwright-core` bundling). |
+| Containerfile | Fork-owned build file on `node:26.13.0-slim` (upstream's `Dockerfile` is deleted) | glibc base for prebuilt native bindings, pinned pnpm installed with npm (Node 26 has no corepack), reproducible frozen installs, HEALTHCHECK, OCI labels. Upstream Dockerfile changes conflict as modify/delete → `git rm Dockerfile` and port meaningful fixes by hand. |
 | tests | Golden `url-header` snapshots normalize app version (`<APP_VERSION>` placeholders) and per-request UUIDs | Version bumps and random per-call headers must not break the fork's golden header lock on every sync. |
 | infra | Everything under `.github/workflows/fork-*`, `scripts/fork/`, `.agents/skills/sync-upstream/` | Fork CI/CD and sync automation (see below). Upstream will never ship these. |
 
-**Patch verdicts, re-evaluated against upstream v0.5.112 (2026-10-29):** the **antigravity**,
+**Patch verdicts, re-evaluated against upstream v0.5.119 (2026-11-14):** the **antigravity**,
 **Dockerfile**, and **Containerfile** behavior patches remain necessary — no upstream equivalent.
 This sync's outcomes:
 
-- **antigravity executor normalization — CONSOLIDATED.** Upstream now calls
-  `normalizeGeminiContents(rawContents, model)` in the executor and passes the model through, which
-  preserves Gemini 4 `functionResponse` ordering. The fork's second, model-less normalize pass was
-  removed; only the empty-normalized-history rejection remains divergent.
-- **antigravity client fingerprint — DROPPED (upstream-equivalent, newer).** Upstream moved to
-  `antigravity/hub/2.24.0 darwin/arm64` (`f172c3c4`), explicitly to fix Gemini 4 Argon 404s, and its
-  unit tests target that UA. The fork's older `antigravity/cli/1.1.22` experiments (and their
-  `ide/2.11.0` predecessor) were dropped during the rebase; `open-sse/providers/shared.js` is
-  byte-identical to upstream.
-- **provider id → alias (`toAlias`) — KEEP, merged.** Upstream added tiered-variant resolution
-  (`gemini-3.8-flash-high`) inside `getModelUpstreamId`; the fork's `toAlias()` wiring was folded
-  into that new shape rather than dropped.
+- **antigravity executor normalization — KEEP (unchanged).** Upstream still owns
+  `normalizeGeminiContents(rawContents, model)`; only the empty-normalized-history rejection remains
+  divergent.
+- **antigravity client fingerprint — upstream-owned.** `open-sse/providers/shared.js` is
+  byte-identical to upstream (`antigravity/hub/2.24.0 darwin/arm64`); no fork override.
+- **provider id → alias (`toAlias`) — KEEP, merged.**
 - **antigravity 200k context / Opus 4.6 thinking — KEEP.** Capability overrides, registry
   `upstreamModelId: "claude-opus-4-6-thinking(high)"`, 502 retry cap, 30s connect timeout, and the
   64000 `maxOutputTokens` envelope default have no upstream equivalent.
@@ -57,16 +51,23 @@ This sync's outcomes:
   OAuthModal stale-callback cleanup + `state` mismatch rejection remain fork-only.
 - **/v1/models custom capability overrides — KEEP.** Upstream still drops user `caps` on this
   surface.
-- **gemini `serializeGeminiToolResult` — still DROPPED** (v0.5.99 verdict): upstream's central
+- **text-only flattening — CONSOLIDATED.** The legacy Ollama flattening (`claude-to-openai` and
+  `filterToOpenAIFormat`) now runs only when the target does not opt into `preserveCacheControl`, so
+  upstream's DashScope cache-marker work (`a61b5a6f`, #2069) survives.
+- **gemini `serializeGeminiToolResult` — still DROPPED.** Upstream's central
   `sanitizeFunctionResponsePayload` remains the better fix.
-- **claude `reasoning_content` → thinking / forged signatures — still DROPPED** (v0.5.91 verdict):
-  source is byte-identical to upstream; the fork keeps its no-forged-signature regression test.
+- **claude `reasoning_content` → thinking / forged signatures — still DROPPED.** Source is
+  byte-identical to upstream; the fork keeps its no-forged-signature regression test.
+- **undici 8.x upgrade — DROPPED (upstream-equivalent, newer).** Upstream's `94f141dd` returned to
+  `undici@7.30.2` because 8.x needs Node >= 22.19 while the published CLI supports Node 20.18.1+;
+  the fork now matches, with upstream's `engines.node` floor restored.
 
-Upstream-inherited failures examined this sync (all fail on pure upstream v0.5.112 too):
-`combo-autoswitch`, `combo-credit-fallback`, `headroom-responses-format`, `security-audit`
-(AUDIT-002), plus the standing known-red cluster (kiro golden, db-benchmark, embeddings.cloud, live
-tests). The fork-only failure this sync was upstream's new `codex-stt-ui` test reading the deleted
-`Dockerfile`; it now asserts against `Containerfile`.
+Upstream-inherited reds examined this sync (the exercised code is byte-identical to upstream):
+`claude-header-forwarding`, `codex-refresh-token`, `kiro-external-idp`, `qoder-proxy-replay`,
+`token-refresh-generic`, and `xai-oauth-service` — 22 tests that stub `globalThis.fetch`, which
+upstream's transport no longer uses (it fetches through its own undici instance). The collection
+failures for `nvidia-params` (`node:test`) and `opencode-executor-proxy-forwarding` (vitest 5 mock
+hoisting) were fixed in the fork's suite.
 
 Re-run this evaluation every sync per the `fork-stewardship` skill; drop a patch only on verified
 upstream equivalence.
