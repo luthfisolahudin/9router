@@ -3,6 +3,9 @@
   "version": "0.5.116",
   "description": "9Router web dashboard",
   "private": true,
+  "engines": {
+    "node": ">=20.18.1"
+  },
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
@@ -41,7 +44,7 @@
     "material-symbols": "^0.48.1",
     "monaco-editor": "^0.57.0",
     "next": "^16.4.2",
-    "node-forge": "^1.4.0",
+    "node-forge": "^1.4.3",
     "node-machine-id": "^1.1.12",
     "open": "^11.0.4",
     "ora": "^9.4.1",
@@ -51,7 +54,7 @@
     "recharts": "^3.10.1",
     "socks-proxy-agent": "^10.1.0",
     "sql.js": "^1.15.1",
-    "undici": "^8.12.3",
+    "undici": "^7.30.2",
     "uuid": "^14.0.3",
     "zustand": "^5.0.16"
   },
