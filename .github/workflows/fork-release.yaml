@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies (frozen lockfile)
         run: pnpm install --frozen-lockfile
 
+      - name: Install ffmpeg for STT tests
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
       - name: Verify fork patch ledger
         run: node scripts/fork/verify-patches.mjs
 
