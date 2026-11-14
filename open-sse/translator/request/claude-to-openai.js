@@ -68,7 +68,7 @@ export function claudeToOpenAIRequest(model, body, stream, credentials, opts = {
         }
       }
     }
-    flattenTextOnlyContent(result.messages);
+    if (!opts.preserveCacheControl) flattenTextOnlyContent(result.messages);
   }
 
   // Fix missing tool responses - OpenAI requires every tool_call to have a response.
