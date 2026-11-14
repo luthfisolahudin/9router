@@ -240,22 +240,6 @@ exports[`GOLDEN buildHeaders (default executor providers) > bazaarlink → heade
 }
 `;
 
-exports[`GOLDEN buildHeaders (default executor providers) > bedrock → headers (apiKey / oauth) 1`] = `
-{
-  "apiKey": "THROW: Cannot read properties of undefined (reading 'header')",
-  "nonStream": "THROW: Cannot read properties of undefined (reading 'header')",
-  "oauth": "THROW: Cannot read properties of undefined (reading 'header')",
-}
-`;
-
-exports[`GOLDEN buildHeaders (default executor providers) > bedrock-xai → headers (apiKey / oauth) 1`] = `
-{
-  "apiKey": "THROW: Cannot read properties of undefined (reading 'header')",
-  "nonStream": "THROW: Cannot read properties of undefined (reading 'header')",
-  "oauth": "THROW: Cannot read properties of undefined (reading 'header')",
-}
-`;
-
 exports[`GOLDEN buildHeaders (default executor providers) > blackbox → headers (apiKey / oauth) 1`] = `
 {
   "apiKey": {
@@ -384,7 +368,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > claude → headers (
     "X-Stainless-Helper-Method": "stream",
     "X-Stainless-Lang": "js",
     "X-Stainless-Os": "MacOS",
-    "X-Stainless-Package-Version": "0.80.0",
+    "X-Stainless-Package-Version": "<APP_VERSION>",
     "X-Stainless-Retry-Count": "0",
     "X-Stainless-Runtime": "node",
     "X-Stainless-Runtime-Version": "v24.14.0",
@@ -402,7 +386,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > claude → headers (
     "X-Stainless-Helper-Method": "stream",
     "X-Stainless-Lang": "js",
     "X-Stainless-Os": "MacOS",
-    "X-Stainless-Package-Version": "0.80.0",
+    "X-Stainless-Package-Version": "<APP_VERSION>",
     "X-Stainless-Retry-Count": "0",
     "X-Stainless-Runtime": "node",
     "X-Stainless-Runtime-Version": "v24.14.0",
@@ -422,7 +406,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > claude → headers (
     "X-Stainless-Helper-Method": "stream",
     "X-Stainless-Lang": "js",
     "X-Stainless-Os": "MacOS",
-    "X-Stainless-Package-Version": "0.80.0",
+    "X-Stainless-Package-Version": "<APP_VERSION>",
     "X-Stainless-Retry-Count": "0",
     "X-Stainless-Runtime": "node",
     "X-Stainless-Runtime-Version": "v24.14.0",
@@ -438,10 +422,10 @@ exports[`GOLDEN buildHeaders (default executor providers) > cline → headers (a
     "Authorization": "Bearer <TOK>",
     "Content-Type": "application/json",
     "HTTP-Referer": "https://cline.bot",
-    "User-Agent": "9Router/0.5.104",
+    "User-Agent": "9Router/<APP_VERSION>",
     "X-CLIENT-TYPE": "9router",
-    "X-CLIENT-VERSION": "0.5.104",
-    "X-CORE-VERSION": "0.5.104",
+    "X-CLIENT-VERSION": "<APP_VERSION>",
+    "X-CORE-VERSION": "<APP_VERSION>",
     "X-IS-MULTIROOT": "false",
     "X-PLATFORM": "<PLATFORM>",
     "X-PLATFORM-VERSION": "<RUNTIME_VERSION>",
@@ -451,10 +435,10 @@ exports[`GOLDEN buildHeaders (default executor providers) > cline → headers (a
     "Authorization": "Bearer <TOK>",
     "Content-Type": "application/json",
     "HTTP-Referer": "https://cline.bot",
-    "User-Agent": "9Router/0.5.104",
+    "User-Agent": "9Router/<APP_VERSION>",
     "X-CLIENT-TYPE": "9router",
-    "X-CLIENT-VERSION": "0.5.104",
-    "X-CORE-VERSION": "0.5.104",
+    "X-CLIENT-VERSION": "<APP_VERSION>",
+    "X-CORE-VERSION": "<APP_VERSION>",
     "X-IS-MULTIROOT": "false",
     "X-PLATFORM": "<PLATFORM>",
     "X-PLATFORM-VERSION": "<RUNTIME_VERSION>",
@@ -465,10 +449,10 @@ exports[`GOLDEN buildHeaders (default executor providers) > cline → headers (a
     "Authorization": "Bearer <TOK>",
     "Content-Type": "application/json",
     "HTTP-Referer": "https://cline.bot",
-    "User-Agent": "9Router/0.5.104",
+    "User-Agent": "9Router/<APP_VERSION>",
     "X-CLIENT-TYPE": "9router",
-    "X-CLIENT-VERSION": "0.5.104",
-    "X-CORE-VERSION": "0.5.104",
+    "X-CLIENT-VERSION": "<APP_VERSION>",
+    "X-CORE-VERSION": "<APP_VERSION>",
     "X-IS-MULTIROOT": "false",
     "X-PLATFORM": "<PLATFORM>",
     "X-PLATFORM-VERSION": "<RUNTIME_VERSION>",
@@ -484,10 +468,10 @@ exports[`GOLDEN buildHeaders (default executor providers) > clinepass → header
     "Authorization": "Bearer <TOK>",
     "Content-Type": "application/json",
     "HTTP-Referer": "https://cline.bot",
-    "User-Agent": "9Router/0.5.104",
+    "User-Agent": "9Router/<APP_VERSION>",
     "X-CLIENT-TYPE": "9router",
-    "X-CLIENT-VERSION": "0.5.104",
-    "X-CORE-VERSION": "0.5.104",
+    "X-CLIENT-VERSION": "<APP_VERSION>",
+    "X-CORE-VERSION": "<APP_VERSION>",
     "X-IS-MULTIROOT": "false",
     "X-PLATFORM": "<PLATFORM>",
     "X-PLATFORM-VERSION": "<RUNTIME_VERSION>",
@@ -497,10 +481,10 @@ exports[`GOLDEN buildHeaders (default executor providers) > clinepass → header
     "Authorization": "Bearer <TOK>",
     "Content-Type": "application/json",
     "HTTP-Referer": "https://cline.bot",
-    "User-Agent": "9Router/0.5.104",
+    "User-Agent": "9Router/<APP_VERSION>",
     "X-CLIENT-TYPE": "9router",
-    "X-CLIENT-VERSION": "0.5.104",
-    "X-CORE-VERSION": "0.5.104",
+    "X-CLIENT-VERSION": "<APP_VERSION>",
+    "X-CORE-VERSION": "<APP_VERSION>",
     "X-IS-MULTIROOT": "false",
     "X-PLATFORM": "<PLATFORM>",
     "X-PLATFORM-VERSION": "<RUNTIME_VERSION>",
@@ -511,10 +495,10 @@ exports[`GOLDEN buildHeaders (default executor providers) > clinepass → header
     "Authorization": "Bearer <TOK>",
     "Content-Type": "application/json",
     "HTTP-Referer": "https://cline.bot",
-    "User-Agent": "9Router/0.5.104",
+    "User-Agent": "9Router/<APP_VERSION>",
     "X-CLIENT-TYPE": "9router",
-    "X-CLIENT-VERSION": "0.5.104",
-    "X-CORE-VERSION": "0.5.104",
+    "X-CLIENT-VERSION": "<APP_VERSION>",
+    "X-CORE-VERSION": "<APP_VERSION>",
     "X-IS-MULTIROOT": "false",
     "X-PLATFORM": "<PLATFORM>",
     "X-PLATFORM-VERSION": "<RUNTIME_VERSION>",
@@ -882,14 +866,14 @@ exports[`GOLDEN buildHeaders (default executor providers) > grok-cli → headers
     "Content-Type": "application/json",
     "User-Agent": "grok-shell/1.0.44 (linux; x86_64)",
     "x-grok-client-identifier": "grok-shell",
-    "x-grok-client-version": "1.0.44",
+    "x-grok-client-version": "<APP_VERSION>",
   },
   "nonStream": {
     "Authorization": "Bearer <TOK>",
     "Content-Type": "application/json",
     "User-Agent": "grok-shell/1.0.44 (linux; x86_64)",
     "x-grok-client-identifier": "grok-shell",
-    "x-grok-client-version": "1.0.44",
+    "x-grok-client-version": "<APP_VERSION>",
   },
   "oauth": {
     "Accept": "text/event-stream",
@@ -897,7 +881,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > grok-cli → headers
     "Content-Type": "application/json",
     "User-Agent": "grok-shell/1.0.44 (linux; x86_64)",
     "x-grok-client-identifier": "grok-shell",
-    "x-grok-client-version": "1.0.44",
+    "x-grok-client-version": "<APP_VERSION>",
   },
 }
 `;
@@ -1011,7 +995,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > kimi → headers (ap
     "X-Msh-Device-Model": "Linux x64",
     "X-Msh-Device-Name": "<VOLATILE>",
     "X-Msh-Platform": "9router",
-    "X-Msh-Version": "0.5.104",
+    "X-Msh-Version": "<APP_VERSION>",
     "x-api-key": "<CRED>",
   },
   "nonStream": {
@@ -1022,7 +1006,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > kimi → headers (ap
     "X-Msh-Device-Model": "Linux x64",
     "X-Msh-Device-Name": "<VOLATILE>",
     "X-Msh-Platform": "9router",
-    "X-Msh-Version": "0.5.104",
+    "X-Msh-Version": "<APP_VERSION>",
     "x-api-key": "<CRED>",
   },
   "oauth": {
@@ -1034,7 +1018,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > kimi → headers (ap
     "X-Msh-Device-Model": "Linux x64",
     "X-Msh-Device-Name": "<VOLATILE>",
     "X-Msh-Platform": "9router",
-    "X-Msh-Version": "0.5.104",
+    "X-Msh-Version": "<APP_VERSION>",
     "x-api-key": "<CRED>",
   },
 }
@@ -1105,80 +1089,6 @@ exports[`GOLDEN buildHeaders (default executor providers) > minimax-cn → heade
     "Anthropic-Version": "2023-06-01",
     "Content-Type": "application/json",
     "x-api-key": "<CRED>",
-  },
-}
-`;
-
-exports[`GOLDEN buildHeaders (default executor providers) > minimax-code → headers (apiKey / oauth) 1`] = `
-{
-  "apiKey": {
-    "Accept": "text/event-stream",
-    "Authorization": "Bearer <TOK>",
-    "Content-Type": "application/json",
-    "User-Agent": "MiniMaxAgent",
-    "X-Mavis-Agent-Id": "main",
-    "X-Mavis-Session-Id": "<VOLATILE>",
-    "X-Mavis-Timezone-Offset": "0",
-    "anthropic-version": "2023-06-01",
-    "x-api-key": "sk-xxx",
-  },
-  "nonStream": {
-    "Authorization": "Bearer <TOK>",
-    "Content-Type": "application/json",
-    "User-Agent": "MiniMaxAgent",
-    "X-Mavis-Agent-Id": "main",
-    "X-Mavis-Session-Id": "<VOLATILE>",
-    "X-Mavis-Timezone-Offset": "0",
-    "anthropic-version": "2023-06-01",
-    "x-api-key": "sk-xxx",
-  },
-  "oauth": {
-    "Accept": "text/event-stream",
-    "Authorization": "Bearer <TOK>",
-    "Content-Type": "application/json",
-    "User-Agent": "MiniMaxAgent",
-    "X-Mavis-Agent-Id": "main",
-    "X-Mavis-Session-Id": "<VOLATILE>",
-    "X-Mavis-Timezone-Offset": "0",
-    "anthropic-version": "2023-06-01",
-    "x-api-key": "sk-xxx",
-  },
-}
-`;
-
-exports[`GOLDEN buildHeaders (default executor providers) > minimax-code-global → headers (apiKey / oauth) 1`] = `
-{
-  "apiKey": {
-    "Accept": "text/event-stream",
-    "Authorization": "Bearer <TOK>",
-    "Content-Type": "application/json",
-    "User-Agent": "MiniMaxAgent",
-    "X-Mavis-Agent-Id": "main",
-    "X-Mavis-Session-Id": "<VOLATILE>",
-    "X-Mavis-Timezone-Offset": "0",
-    "anthropic-version": "2023-06-01",
-    "x-api-key": "sk-xxx",
-  },
-  "nonStream": {
-    "Authorization": "Bearer <TOK>",
-    "Content-Type": "application/json",
-    "User-Agent": "MiniMaxAgent",
-    "X-Mavis-Agent-Id": "main",
-    "X-Mavis-Session-Id": "<VOLATILE>",
-    "X-Mavis-Timezone-Offset": "0",
-    "anthropic-version": "2023-06-01",
-    "x-api-key": "sk-xxx",
-  },
-  "oauth": {
-    "Accept": "text/event-stream",
-    "Authorization": "Bearer <TOK>",
-    "Content-Type": "application/json",
-    "User-Agent": "MiniMaxAgent",
-    "X-Mavis-Agent-Id": "main",
-    "X-Mavis-Session-Id": "<VOLATILE>",
-    "X-Mavis-Timezone-Offset": "0",
-    "anthropic-version": "2023-06-01",
-    "x-api-key": "sk-xxx",
   },
 }
 `;
@@ -1255,7 +1165,7 @@ exports[`GOLDEN buildHeaders (default executor providers) > muse → headers (ap
     "Accept": "text/event-stream",
     "Authorization": "Bearer <TOK>",
     "Content-Type": "application/json",
-    "x-api-version": "1.0.0",
+    "x-api-version": "<APP_VERSION>",
   },
 }
 `;
@@ -1552,6 +1462,25 @@ exports[`GOLDEN buildHeaders (default executor providers) > sambanova → header
 `;
 
 exports[`GOLDEN buildHeaders (default executor providers) > sensenova → headers (apiKey / oauth) 1`] = `
+{
+  "apiKey": {
+    "Accept": "text/event-stream",
+    "Authorization": "Bearer <TOK>",
+    "Content-Type": "application/json",
+  },
+  "nonStream": {
+    "Authorization": "Bearer <TOK>",
+    "Content-Type": "application/json",
+  },
+  "oauth": {
+    "Accept": "text/event-stream",
+    "Authorization": "Bearer <TOK>",
+    "Content-Type": "application/json",
+  },
+}
+`;
+
+exports[`GOLDEN buildHeaders (default executor providers) > sensenova-intl → headers (apiKey / oauth) 1`] = `
 {
   "apiKey": {
     "Accept": "text/event-stream",
@@ -1904,20 +1833,6 @@ exports[`GOLDEN buildUrl (default executor providers) > bazaarlink → url (stre
 }
 `;
 
-exports[`GOLDEN buildUrl (default executor providers) > bedrock → url (stream + non-stream) 1`] = `
-{
-  "nonStream": "https://bedrock-runtime.{region}.amazonaws.com",
-  "stream": "https://bedrock-runtime.{region}.amazonaws.com",
-}
-`;
-
-exports[`GOLDEN buildUrl (default executor providers) > bedrock-xai → url (stream + non-stream) 1`] = `
-{
-  "nonStream": "https://bedrock-runtime.{region}.amazonaws.com",
-  "stream": "https://bedrock-runtime.{region}.amazonaws.com",
-}
-`;
-
 exports[`GOLDEN buildUrl (default executor providers) > blackbox → url (stream + non-stream) 1`] = `
 {
   "nonStream": "https://api.blackbox.ai/v1/chat/completions",
@@ -2156,20 +2071,6 @@ exports[`GOLDEN buildUrl (default executor providers) > minimax-cn → url (stre
 }
 `;
 
-exports[`GOLDEN buildUrl (default executor providers) > minimax-code → url (stream + non-stream) 1`] = `
-{
-  "nonStream": "https://agent.minimax.cn/mavis/api/v1/llm/v1/messages",
-  "stream": "https://agent.minimax.cn/mavis/api/v1/llm/v1/messages",
-}
-`;
-
-exports[`GOLDEN buildUrl (default executor providers) > minimax-code-global → url (stream + non-stream) 1`] = `
-{
-  "nonStream": "https://agent.minimax.io/mavis/api/v1/llm/v1/messages",
-  "stream": "https://agent.minimax.io/mavis/api/v1/llm/v1/messages",
-}
-`;
-
 exports[`GOLDEN buildUrl (default executor providers) > mistral → url (stream + non-stream) 1`] = `
 {
   "nonStream": "https://api.mistral.ai/v1/chat/completions",
@@ -2307,6 +2208,13 @@ exports[`GOLDEN buildUrl (default executor providers) > sensenova → url (strea
 {
   "nonStream": "https://token.sensenova.cn/v1/chat/completions",
   "stream": "https://token.sensenova.cn/v1/chat/completions",
+}
+`;
+
+exports[`GOLDEN buildUrl (default executor providers) > sensenova-intl → url (stream + non-stream) 1`] = `
+{
+  "nonStream": "https://token.sensenova.ai/v1/chat/completions",
+  "stream": "https://token.sensenova.ai/v1/chat/completions",
 }
 `;
 
