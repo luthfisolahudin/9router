@@ -17,10 +17,6 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
-  issues: write
-
-env:
-  ISSUE_TITLE_PREFIX: "Manual sync needed:"
 
 jobs:
   check-and-sync:
@@ -53,7 +49,6 @@ jobs:
           python3 scripts/fork/check-upstream-tag.py --github-output "$GITHUB_OUTPUT"
 
       - name: Prepare sync PR (merge upstream, preserve fork automation)
-        id: sync
         if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,38 +68,48 @@ jobs:
 
           if ! bash scripts/fork/create-sync-pr.sh "${TARGET_TAG}" "${TARGET_COMMIT}" "https://github.com/decolua/9router.git"; then
             # Only a merge conflict is a handled outcome (fork patches colliding
-            # with upstream changes). Surface it as an issue — a human or agent
-            # resolves it with the sync-upstream skill. Anything else is a real
-            # failure and keeps the red X.
+            # with upstream changes). Surface it on the run summary and as an
+            # annotation; this repo keeps issues disabled.
             CONFLICTED=$(git diff --name-only --diff-filter=U | sed 's/^/- `/' | sed 's/$/`/')
             if [[ -z "$CONFLICTED" ]]; then
               echo "Sync script failed without a merge conflict."
               exit 1
             fi
             git merge --abort 2>/dev/null || true
-            BODY=$(printf 'Upstream `%s` (`%s`) cannot be merged automatically. Conflicting files:\n%s\n\nResolve manually: rebase the fork onto the upstream tag, preserving every fork patch (see `FORK.md`), verify tests + build, then push master.' "$TARGET_TAG" "$TARGET_COMMIT" "$CONFLICTED")
-            EXISTING=$(gh issue list --state open --json number,title --jq '[.[] | select(.title | startswith("'"${ISSUE_TITLE_PREFIX}"'")) | .number] | first // empty')
-            if [[ -z "$EXISTING" ]]; then
-              gh issue create --title "${ISSUE_TITLE_PREFIX} upstream ${TARGET_TAG} conflicts with fork patches" --body "$BODY"
-            else
-              gh issue comment "$EXISTING" --body "$BODY"
-            fi
-            echo "handled=conflict" >> "$GITHUB_OUTPUT"
-            exit 0
+            {
+              echo "## Manual sync needed: ${TARGET_TAG}"
+              echo ""
+              echo "Upstream \`${TARGET_TAG}\` (\`${TARGET_COMMIT}\`) conflicts with fork patches."
+              echo ""
+              echo "Conflicting files:"
+              echo "${CONFLICTED}"
+              echo ""
+              echo "Resolve with \`.agents/skills/sync-upstream/SKILL.md\`, then push master."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=Manual sync needed::Upstream ${TARGET_TAG} conflicts with fork patches: $(echo "${CONFLICTED}" | tr '\n' ' ')"
+            exit 1
           fi
 
       - name: Install dependencies (non-frozen; resolves and vets new versions)
-        if: ${{ steps.sync.outputs.handled != 'conflict' && (steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '') }}
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
         run: pnpm install
 
-      - name: Run regression tests on merged tree
-        if: ${{ steps.sync.outputs.handled != 'conflict' && (steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '') }}
-        run: pnpm -C tests exec vitest run translator/gemini-tool-result.test.js translator/bugs-antigravity.test.js
+      - name: Verify fork patch ledger
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        run: node scripts/fork/verify-patches.mjs
+
+      - name: Run full test suite against known-red baseline
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        run: node scripts/fork/test-gate.mjs
+
+      - name: Build Next.js application
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
+        run: pnpm run build
 
       # Upstream dependency bumps change resolution → commit the refreshed
       # lockfile into the sync PR so the release pipeline's frozen install matches.
       - name: Commit refreshed pnpm-lock.yaml into the sync PR
-        if: ${{ steps.sync.outputs.handled != 'conflict' && (steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '') }}
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
         run: |
           BRANCH="$(git rev-parse --abbrev-ref HEAD)"
           if ! git diff --quiet pnpm-lock.yaml; then
@@ -117,13 +122,9 @@ jobs:
 
       # Merging the PR pushes master, which triggers Fork Release — the only
       # pipeline that builds images and promotes them to production.
-      - name: Merge sync PR and close stale conflict issues
-        if: ${{ steps.sync.outputs.handled != 'conflict' && (steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '') }}
+      - name: Merge sync PR
+        if: ${{ steps.check.outputs.has_update == 'true' || github.event.inputs.force_tag != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr merge "$(cat /tmp/fork-sync-pr-number)" --merge --delete-branch
-          STALE=$(gh issue list --state open --json number,title --jq '[.[] | select(.title | startswith("'"${ISSUE_TITLE_PREFIX}"'")) | .number] | join(" ")')
-          for n in $STALE; do
-            gh issue close "$n" --comment "Resolved by automated sync; the release pipeline is building the new image."
-          done

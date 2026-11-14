@@ -28,7 +28,20 @@ git fetch "$UPSTREAM_REPO" "refs/tags/${TARGET_TAG}:refs/tags/${TARGET_TAG}" || 
 
 DEFAULT_BRANCH="${GITHUB_REF_NAME:-master}"
 git checkout -B "$BRANCH_NAME" "origin/${DEFAULT_BRANCH}"
-git merge --no-ff --no-commit "$TARGET_COMMIT"
+git config rerere.enabled true
+git config rerere.autoupdate false
+
+if ! git merge --no-ff --no-commit "$TARGET_COMMIT"; then
+  echo "==> Merge conflicts; attempting mechanical package.json resolution..."
+  node scripts/fork/resolve-package-json.mjs || true
+  UNRESOLVED="$(git diff --name-only --diff-filter=U || true)"
+  if [[ -n "$UNRESOLVED" ]]; then
+    echo "==> Unresolved conflicts:"
+    printf '%s\n' "$UNRESOLVED"
+    exit 1
+  fi
+  echo "==> All conflicts resolved mechanically."
+fi
 
 # Fork automation is policy, not upstream application source. Keep the reviewed
 # versions while allowing application files and the Gemini patch to merge normally.
@@ -75,8 +88,9 @@ PR_BODY="Automated upstream sync PR from \`${UPSTREAM_REPO}\` tag \`${TARGET_TAG
 ### Fork Protections Applied:
 - Preserved all fork GitHub Actions workflows under \`.github/workflows/\`
 - Preserved fork automation scripts under \`scripts/fork/\`
+- Resolved \`package.json\` mechanically (higher semver wins, fork fields kept)
 - Updated \`.github/fork-metadata.json\`
-- CI validation runs regression tests before merge; after merge the Fork Release pipeline builds, smoke-tests, and promotes the image."
+- The fork patch ledger, full-suite gate, and build run before merge; after merge the Fork Release pipeline builds, smoke-tests, and promotes the image."
 
 EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' 2>/dev/null || echo "")
 
