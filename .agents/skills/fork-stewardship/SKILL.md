@@ -55,9 +55,9 @@ new failures against the pre-existing baseline.
 
 **Upstream owns this constant now.** `open-sse/providers/shared.js` (`ANTIGRAVITY_IDE_VERSION` /
 `ANTIGRAVITY_IDE_USER_AGENT`) is byte-identical to upstream — currently
-`antigravity/hub/2.24.0 darwin/arm64`, which upstream ships to fix Gemini 4 Argon 404s. The fork's
-older experiments (`antigravity/ide/2.11.0`, `antigravity/cli/1.1.22 …`) were dropped because
-upstream now tracks the current official client itself.
+`antigravity/hub/2.33.0 darwin/arm64` (`src/mitm/antigravityIdeVersion.js`), which upstream ships to
+track the live IDE. The fork's older experiments (`antigravity/ide/2.11.0`, `antigravity/cli/1.1.22 …`)
+were dropped because upstream now tracks the current official client itself.
 
 **Do not reintroduce a fork-side fingerprint override.** On each sync, compare
 `git diff upstream/master -- open-sse/providers/shared.js` (and

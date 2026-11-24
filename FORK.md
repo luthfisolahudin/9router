@@ -34,7 +34,7 @@ the source of truth for both the sync automation and the release pipeline's imag
 | tests | Golden `url-header` snapshots normalize app version (`<APP_VERSION>` placeholders) and per-request UUIDs | Version bumps and random per-call headers must not break the fork's golden header lock on every sync. |
 | infra | Everything under `.github/workflows/fork-*`, `scripts/fork/`, `.agents/skills/sync-upstream/` | Fork CI/CD and sync automation (see below). Upstream will never ship these. |
 
-**Patch verdicts, re-evaluated against upstream v0.5.119 (2026-11-14):** the **antigravity**,
+**Patch verdicts, re-evaluated against upstream v0.5.123 (2026-11-25):** the **antigravity**,
 **Dockerfile**, and **Containerfile** behavior patches remain necessary — no upstream equivalent.
 This sync's outcomes:
 
@@ -42,7 +42,7 @@ This sync's outcomes:
   `normalizeGeminiContents(rawContents, model)`; only the empty-normalized-history rejection remains
   divergent.
 - **antigravity client fingerprint — upstream-owned.** `open-sse/providers/shared.js` is
-  byte-identical to upstream (`antigravity/hub/2.24.0 darwin/arm64`); no fork override.
+  byte-identical to upstream (`antigravity/hub/2.33.0 darwin/arm64`); no fork override.
 - **provider id → alias (`toAlias`) — KEEP, merged.**
 - **antigravity 200k context / Opus 4.6 thinking — KEEP.** Capability overrides, registry
   `upstreamModelId: "claude-opus-4-6-thinking(high)"`, 502 retry cap, 30s connect timeout, and the
