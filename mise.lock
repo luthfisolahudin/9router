@@ -36,13 +36,14 @@ checksum = "sha256:e2edda75bfb089654705cf65a13b58933bfd5f57148e8ebda916f58a2474f
 url = "https://nodejs.org/dist/v26.13.1/node-v26.13.1-win-x64.zip"
 
 [[tools.pnpm]]
-version = "12.20.0"
-aube = { path = ".mise/locks/pnpm/12.20.0~d069db47", digest = "sha256:e61a1cd03c6c8ad2677feeba426c28c69242f0eba6b2dbf37fe373a6a5fbb7d7" }
+version = "12.23.0"
+aube = { path = ".mise/locks/pnpm/12.23.0~b5d67f29", digest = "sha256:3a164eda522b40c4ca764f1dbbf4adaeae193d500ab6cc43a831753d29714bc2" }
 backend = "npm:pnpm"
-specifiers = ["12.20.0"]
+specifiers = ["12.23.0"]
 
 [tools.pnpm.options]
-checksum = "sha512:6ccc74997ccef4e67999788e18dbfbfa583e2a849668668db4707b6a8306662f47156e650232a985bd3ec24cf9364c1aa154d37e51ed7aac62c1cd1e3afc80c3"
+allow_builds = "true"
+checksum = "sha512:02da94ffaf133f46074322afe552f90d40b5f71ae259aefbccdacc5085b1d617e98d65e0131f5748b9b67445978ee5055d7d59a473f1eef0d504854fefcd5975"
 
 [tools.pnpm.provenance]
 repository = "github.com/pnpm/pnpm"

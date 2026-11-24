@@ -12,7 +12,7 @@
 # so the copied standalone binary matches. Everything else in the image is
 # resolved from the tracked pnpm-lock.yaml.
 ARG NODE_IMAGE=node:26.13.1-slim
-ARG PNPM_IMAGE=ghcr.io/pnpm/pnpm:12.20.0
+ARG PNPM_IMAGE=ghcr.io/pnpm/pnpm:12.23.0
 # ─────────────────────────────────────────────────────────────────────────────
 
 ########## pnpm — official standalone binary ##########
