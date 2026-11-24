@@ -88,7 +88,7 @@ PR_BODY="Automated upstream sync PR from \`${UPSTREAM_REPO}\` tag \`${TARGET_TAG
 ### Fork Protections Applied:
 - Preserved all fork GitHub Actions workflows under \`.github/workflows/\`
 - Preserved fork automation scripts under \`scripts/fork/\`
-- Resolved \`package.json\` mechanically (higher semver wins, fork fields kept)
+- Resolved every conflicted \`package.json\` (root, \`cli/\`, \`tests/\`) mechanically (higher semver wins, fork fields kept)
 - Updated \`.github/fork-metadata.json\`
 - The fork patch ledger, full-suite gate, and build run before merge; after merge the Fork Release pipeline builds, smoke-tests, and promotes the image."
 
