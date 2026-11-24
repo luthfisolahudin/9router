@@ -1,6 +1,6 @@
 {
   "reason": "Upstream-inherited: these tests stub globalThis.fetch, but the transport fetches through its own undici instance. The exercised code is byte-identical to upstream. Remove an entry as soon as it passes.",
-  "updatedFor": "v0.5.119",
+  "updatedFor": "v0.5.123",
   "files": {
     "unit/claude-header-forwarding.test.js": [
       "proxyAwareFetch — api.anthropic.com routing routes api.anthropic.com through native fetch (got-scraping is disabled) and returns ok response",

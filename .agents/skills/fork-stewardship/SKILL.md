@@ -99,7 +99,7 @@ plus one real request through the deployed router.
 ## 5. Standing health check (every few upstream tags)
 
 1. Full suite: `node scripts/fork/test-gate.mjs` — fails only on failures outside
-   `scripts/fork/known-red.json` (22 upstream-inherited fetch-stub reds in six files as of v0.5.119).
+   `scripts/fork/known-red.json` (22 upstream-inherited fetch-stub reds in six files as of v0.5.123).
    A baseline entry that starts passing is reported for pruning.
 2. `node scripts/fork/verify-patches.mjs` — every behavior patch still has its files, markers, and tests.
 3. `pnpm audit --prod --audit-level high` — release gate locally before pushing.
