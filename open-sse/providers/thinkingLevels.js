@@ -99,6 +99,14 @@ const PATTERN_THINKING = [
   { provider: "alitp-intl", pattern: "*qwen4*", levels: ["none", "low", "medium", "xhigh"] },
   { provider: "qwencloud", pattern: "*qwen3.8*", levels: ["none", "low", "medium", "xhigh"] },
   { provider: "qwencloud", pattern: "*qwen4*", levels: ["none", "low", "medium", "xhigh"] },
+  // GLM-5.x: the zai wire maps effort to low|high|max (see applyFormat "zai"). A
+  // `thinking`-only advertised set claimed the picker had just on/off while the wire
+  // was already sending those three tiers. Only providers without their own entry
+  // below need this; codebuddy-cn publishes a narrower per-model set.
+  { provider: "glm-cn", pattern: "glm-5.*", levels: ["none", "low", "high", "max"] },
+  { provider: "glm", pattern: "glm-5.*", levels: ["none", "low", "high", "max"] },
+  { provider: "ocz", pattern: "glm-5.*", levels: ["none", "low", "high", "max"] },
+  { provider: "oc", pattern: "glm-5.*", levels: ["none", "low", "high", "max"] },
   { pattern: "*deepseek-v4.1-flash-free*", levels: ["low", "high", "max"] },
   // DeepSeek's own API serves low|high|max (api-docs.deepseek.com Chat Completions:
   // "Possible values: none, low, high, max", medium/xhigh map to high). A provider-

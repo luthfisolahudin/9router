@@ -177,8 +177,19 @@ function toLevel(cfg) {
   return null;
 }
 
+// OpenAI's wire is the one place a client's level is forwarded almost verbatim, so an
+// unknown value ("bogus") would reach the upstream as-is. Only translate the two cases
+// this format actually owns — max/ultra — and drop anything outside the enum.
+const OPENAI_EFFORT_ORDER = ["minimal", "low", "medium", "high", "xhigh", "max"];
+
 function normalizeOpenAILevel(level, supportedLevels) {
-  if (level !== "max" && level !== "ultra") return level;
+  if (level !== "max" && level !== "ultra") {
+    // `auto` is an internal mode the executors drop before the wire; keep it intact.
+    if (level === "auto") return level;
+    // Outside the enum: send a known default rather than echoing an arbitrary string
+    // the upstream would reject.
+    return OPENAI_EFFORT_ORDER.includes(level) ? level : "medium";
+  }
   if (supportedLevels?.includes(level)) return level;
   if (level === "ultra" && supportedLevels?.includes("max")) return "max";
   return "xhigh";
