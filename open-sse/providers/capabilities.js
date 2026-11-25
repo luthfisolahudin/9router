@@ -894,6 +894,36 @@ function isCommandCodeTextOnly(model) {
 }
 export function getCapabilitiesForModel(provider, model) {
   if (!model) return { ...DEFAULT_CAPABILITIES };
+  return clearChatOnlyCaps(baseCapabilitiesForModel(provider, model), provider, model);
+}
+
+// Embedding and TTS ids inherit chat patterns by name: "Qwen/Qwen3-Embedding-8B"
+// matched the qwen family and advertised reasoning levels, so a picker could offer
+// effort on an endpoint that only returns vectors, and "*-tts" inherited Gemini's
+// thinking budget. Chat-only facts are cleared where the id declares a non-chat role.
+const NON_CHAT_MODEL_PATTERN = /(?:^|[-_/])(?:embedding|embed|rerank|tts|whisper)(?:[-_/]|$)/i;
+const CHAT_ONLY_CAPS = ["reasoning", "thinkingFormat", "search", "tools"];
+
+function clearChatOnlyCaps(caps, provider, model) {
+  if (!NON_CHAT_MODEL_PATTERN.test(String(model))) return caps;
+  const out = { ...caps };
+  for (const key of CHAT_ONLY_CAPS) {
+    out[key] = key === "reasoning" || key === "search" || key === "tools" ? false : null;
+  }
+  // The generic `*gemini*` / `*qwen*` patterns also hand an embedding or TTS id the
+  // chat family's limits (1M/64k). Those describe the chat models, not this endpoint,
+  // so they are dropped here and re-filled by `refine` from the synced catalog when a
+  // real value exists — an unstated limit beats a guessed-high one.
+  const limits = getCatalogSource()?.getLimits(provider, model);
+  if (limits?.contextWindow > 0) out.contextWindow = limits.contextWindow;
+  else out.contextWindow = null;
+  if (limits?.maxOutput > 0) out.maxOutput = limits.maxOutput;
+  else out.maxOutput = null;
+  return out;
+}
+
+function baseCapabilitiesForModel(provider, model) {
+  if (!model) return { ...DEFAULT_CAPABILITIES };
 
   // Canonical exact lookup strips vendor prefix: "anthropic/claude-opus-4.7" -> "claude-opus-4.7".
   const baseModel = model.includes("/") ? model.split("/").pop() : model;
