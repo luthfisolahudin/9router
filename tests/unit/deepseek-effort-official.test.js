@@ -24,7 +24,8 @@ describe("DeepSeek effort matches the vendor enum", () => {
   });
 
   it("keeps a gateway that publishes its own set untouched", () => {
-    // CodeBuddy CN publishes only high|max; low must still collapse there.
-    expect(getThinkingLevels("cbcn", "deepseek-v4-pro")).toEqual(["none", "high", "max"]);
+    // CodeBuddy CN's product config publishes per-model efforts; deepseek-v4-pro is
+    // low|high|xhigh there, so DeepSeek's own none/low/high/max must not override it.
+    expect(getThinkingLevels("cbcn", "deepseek-v4-pro")).toEqual(["low", "high", "xhigh"]);
   });
 });

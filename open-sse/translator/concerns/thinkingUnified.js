@@ -206,13 +206,21 @@ function toGeminiThinkingLevel(cfg, supportedLevels) {
   return effortToThinkingLevel(level);
 }
 
-function toKimiReasoningEffort(cfg) {
+function toKimiReasoningEffort(cfg, supportedLevels) {
   const level = toLevel(cfg);
-  if (level === "auto") return "high";
-  if (level === "minimal") return "low";
-  if (level === "xhigh") return "max";
-  if (["low", "medium", "high", "max"].includes(level)) return level;
-  return null;
+  if (level === "auto") return supportedLevels?.includes("high") ? "high" : supportedLevels?.[0] ?? "high";
+  if (level === "minimal") return supportedLevels?.includes("low") ? "low" : supportedLevels?.[0] ?? "low";
+  if (level === "xhigh") return supportedLevels?.includes("max") ? "max" : supportedLevels?.at(-1) ?? "max";
+  if (!["low", "medium", "high", "max"].includes(level)) return null;
+  if (!supportedLevels?.length) return level;
+  if (supportedLevels.includes(level)) return level;
+  // Kimi K3 publishes low|high|max only: drop to the nearest lower advertised tier
+  // rather than sending "medium", which the API rejects.
+  const order = ["low", "medium", "high", "max"];
+  for (let i = order.indexOf(level); i >= 0; i--) {
+    if (supportedLevels.includes(order[i])) return order[i];
+  }
+  return supportedLevels[0];
 }
 
 const GEMINI_LEVEL_OUTPUT_FLOOR = {
@@ -400,7 +408,7 @@ function applyFormat(fmt, body, cfg, caps, supportedLevels, display, model = "",
     }
     case "kimi": {
       if (none && canDisable) { body.thinking = { type: "disabled" }; break; }
-      const effort = toKimiReasoningEffort(eff);
+      const effort = toKimiReasoningEffort(eff, supportedLevels);
       if (effort) body.reasoning_effort = effort;
       break;
     }

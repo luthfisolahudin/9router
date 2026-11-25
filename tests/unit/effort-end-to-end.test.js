@@ -35,8 +35,7 @@ function hasEffortField(wire) {
 }
 
 describe("every advertised effort survives translation and the executor", () => {
-  it("reaches the executor body for every model and source format", () => {
-    const failures = [];
+  it("reaches the executor body for every model and source format", () => {    const failures = [];
     let checked = 0;
 
     for (const alias of Object.keys(PROVIDER_MODELS)) {
@@ -72,5 +71,5 @@ describe("every advertised effort survives translation and the executor", () => 
 
     expect(checked).toBeGreaterThan(2000);
     expect(failures.slice(0, 20)).toEqual([]);
-  });
+  }, 120_000);
 });

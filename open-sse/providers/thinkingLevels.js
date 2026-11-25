@@ -3,7 +3,7 @@
 import { getCapabilitiesForModel } from "./capabilities.js";
 import { matchPattern } from "./pricing.js";
 import { resolveKiroEffortPath } from "../config/kiroConstants.js";
-import { getModelMeta } from "../config/providerModels.js";
+import { getModelMeta, PROVIDER_ID_TO_ALIAS } from "../config/providerModels.js";
 import { modelTier } from "./models/schema.js";
 
 // Shared level sets (deduped) — verified against provider docs + wire in thinkingUnified.applyFormat.
@@ -91,6 +91,10 @@ const PATTERN_THINKING = [
   // forwards the level verbatim (no low→high collapse). The generic
   // *deepseek-v4.* glob below would advertise medium/xhigh, which the model does
   // not serve, so this entry MUST stay above it.
+  // Kimi K3 / K3.1 Pro (platform.kimi.ai Model Parameter Reference): effort is
+  // low|high|max with max as the default, and `thinking` is unsupported. The generic
+  // kimi set also offered medium, which the K3 series does not accept.
+  { pattern: "*kimi-k3*", levels: ["low", "high", "max"] },
   // Alibaba Model Studio (docs.qwencloud.com, alibabacloud.com Model Studio): the
   // Qwen 3.8 family serves low|medium|xhigh with xhigh as the DEFAULT — the top tier
   // is not `high`, so the generic qwen set made the model's best level unreachable.
@@ -145,23 +149,42 @@ const PATTERN_THINKING = [
 const OPENAI_MAX_EFFORT_MODEL = /(?:^|\/)gpt-(?:5\.6|6)(?:[.-]|$)/i;
 const isOpenAICompatibleNode = (provider) => String(provider || "").startsWith("openai-compatible-");
 
+// Accept a provider id or its alias: callers pass whichever they have (the models
+// routes use the id, executor code the alias), and a provider-scoped pattern can be
+// written against either spelling. Both forms are tried rather than normalised to one,
+// because the table already contains both (`minimax-code` and its `mm` alias).
+// A provider-scoped pattern may be written against either the registry id or its
+// short alias, and callers pass whichever they hold. Only a real id↔alias pair is
+// added: the table also aliases distinct providers onto one short key (`oc` covers
+// both opencode and opencode-zen), so treating every co-aliased id as a spelling
+// would let one provider's pattern leak onto another.
+function providerSpellings(provider) {
+  if (!provider) return [];
+  const out = new Set([provider]);
+  const alias = PROVIDER_ID_TO_ALIAS[provider];
+  if (alias) out.add(alias);
+  const id = Object.entries(PROVIDER_ID_TO_ALIAS).find(([, a]) => a === provider)?.[0];
+  if (id) out.add(id);
+  return [...out];
+}
+
 // Returns valid thinking levels for a model, or null when the model has no reasoning.
 export function getThinkingLevels(provider, model) {
-  const normalizedProvider = provider === "ag" ? "antigravity" : provider;
-  if (normalizedProvider === "kiro" && resolveKiroEffortPath(model) === null) return null;
-  const caps = getCapabilitiesForModel(normalizedProvider, model);
+  const spellings = providerSpellings(provider);
+  if (spellings.includes("kiro") && resolveKiroEffortPath(model) === null) return null;
+  const caps = getCapabilitiesForModel(provider, model);
   if (!caps.reasoning) return null;
   const baseId = String(model || "").replace(/\([^()]+\)\s*$/, "");
   // A tiered entry is one fixed effort ("gemini-4-neon-low"), not the whole family:
   // advertising low..high on it lets a client ask for a level the id cannot honour.
-  const pinned = modelTier(getModelMeta(normalizedProvider, baseId));
+  const pinned = modelTier(getModelMeta(provider, baseId));
   if (pinned) return [pinned];
-  const modelLevels = getModelMeta(normalizedProvider, baseId)?.thinkingLevels;
+  const modelLevels = getModelMeta(provider, baseId)?.thinkingLevels;
   const hit = PATTERN_THINKING.find((entry) =>
-    (!entry.provider || entry.provider === normalizedProvider) && matchPattern(entry.pattern, model)
+    (!entry.provider || spellings.includes(entry.provider)) && matchPattern(entry.pattern, model)
   );
   let levels = modelLevels || hit?.levels
-    || (isOpenAICompatibleNode(normalizedProvider) && OPENAI_MAX_EFFORT_MODEL.test(baseId) ? CODEX_GPT_5_6_LEVELS : null)
+    || (spellings.some(isOpenAICompatibleNode) && OPENAI_MAX_EFFORT_MODEL.test(baseId) ? CODEX_GPT_5_6_LEVELS : null)
     || FORMAT_LEVELS[caps.thinkingFormat] || L.base;
   if (caps.thinkingCanDisable === false) levels = levels.filter((l) => l !== "none");
   return levels;
