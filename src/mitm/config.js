@@ -126,6 +126,23 @@ const MODEL_PATTERNS = {
   ],
 };
 
+// Effort tier a mapped alias presets ("gemini-4-neon-high" -> "high"). The IDE states
+// its own effort in generationConfig.thinkingConfig, so a tiered alias must yield to it.
+const EFFORT_TIER_SUFFIX = /-(xhigh|high|medium|low|max)$/;
+
+/**
+ * The family id behind a tier preset, or null when the alias is not one.
+ * Only ids the provider actually registers as a tier get collapsed, so a real
+ * model named "-max"/"-high" elsewhere is left alone.
+ */
+function tierBaseId(tool, model, aliasTable) {
+  if (!model) return null;
+  const base = String(model).replace(EFFORT_TIER_SUFFIX, "");
+  if (base === model) return null;
+  const tier = model.slice(base.length + 1);
+  return aliasTable?.[base] && aliasTable?.[`${base}-${tier}`] ? base : null;
+}
+
 // Models that must NEVER be re-routed — always passthrough to the real upstream, even when
 // the tool's other models are mapped. Antigravity's tab-autocomplete (`tab_jump_flash_lite_preview`,
 // `tab_flash_lite_preview`, requestType tab/tab_jump) is latency-critical inline completion; routing
@@ -197,4 +214,4 @@ function extractModel(url, body) {
   }
 }
 
-module.exports = { IS_DEV, LSOF_BIN, TARGET_HOSTS, URL_PATTERNS, MODEL_SYNONYMS, MODEL_PATTERNS, MODEL_NO_MAP, LOG_BLACKLIST_URL_PARTS, getToolForHost, isChatRequest, extractModel };
+module.exports = { IS_DEV, LSOF_BIN, TARGET_HOSTS, URL_PATTERNS, MODEL_SYNONYMS, MODEL_PATTERNS, MODEL_NO_MAP, LOG_BLACKLIST_URL_PARTS, getToolForHost, isChatRequest, extractModel, tierBaseId };

@@ -33,9 +33,14 @@ export function antigravityToOpenAIRequest(model, body, stream) {
       result.top_k = config.topK;
     }
 
-    // Thinking config → reasoning_effort
+    // Thinking config → reasoning_effort. Gemini 4 signals effort as `thinkingLevel`;
+    // older Antigravity models use a numeric `thinkingBudget`. Reading only the budget
+    // dropped every effort the IDE expressed for a level-based model.
     if (config.thinkingConfig) {
-      const effort = budgetToEffort(config.thinkingConfig.thinkingBudget || 0);
+      const declaredLevel = typeof config.thinkingConfig.thinkingLevel === "string"
+        ? config.thinkingConfig.thinkingLevel.trim().toLowerCase()
+        : "";
+      const effort = declaredLevel || budgetToEffort(config.thinkingConfig.thinkingBudget || 0);
       if (effort) result.reasoning_effort = effort;
     }
   }

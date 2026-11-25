@@ -1,5 +1,6 @@
 const { err, createResponseDumper } = require("../logger");
-const { IS_DEV } = require("../config");
+const { IS_DEV, tierBaseId } = require("../config");
+const { getMitmAlias } = require("../dbReader");
 const { fetchRouter, pipeSSE } = require("./base");
 
 /**
@@ -13,6 +14,13 @@ async function intercept(req, res, bodyBuffer, mappedModel) {
   try {
     const body = JSON.parse(bodyBuffer.toString());
     if (body.model) body.model = mappedModel;
+    // The IDE states its own effort in generationConfig.thinkingConfig. A mapping
+    // that points at a tier preset would otherwise win over it, so drop the preset
+    // and let the level decide which tier the router resolves.
+    const declaredLevel = body.request?.generationConfig?.thinkingConfig?.thinkingLevel;
+    if (typeof declaredLevel === "string" && declaredLevel.trim()) {
+      body.model = tierBaseId("antigravity", mappedModel, getMitmAlias("antigravity")) || mappedModel;
+    }
 
     const routerRes = await fetchRouter(body, "/v1/chat/completions", req.headers);
     await pipeSSE(routerRes, res, dumper);
