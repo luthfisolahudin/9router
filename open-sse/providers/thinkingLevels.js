@@ -48,6 +48,14 @@ const PATTERN_THINKING = [
   { pattern: "*gemini-4-hydrogen*", levels: ["low", "medium", "high", "xhigh"] },
   // Gemini 4 (Argon, Carbon) rejects "minimal" with 400 — LOW is the floor; cannot disable thinking.
   { pattern: "*gemini-4*", levels: ["low", "medium", "high"] },
+  // Per-model level sets from Google's own table (docs.cloud.google.com Gemini thinking +
+  // aistudio thinking guide). The gemini-level format default advertises "minimal", which
+  // these models reject with 400 INVALID_ARGUMENT, so each family below pins its real set.
+  { pattern: "*gemini-3.8*", levels: ["low", "medium", "high"] },
+  { pattern: "*gemini-3.7*", levels: ["low", "medium", "high"] },
+  { pattern: "*gemini-3.1-pro*", levels: ["low", "medium", "high"] },
+  // 3 Pro predates the medium tier: only low and high, and no minimal.
+  { pattern: "*gemini-3-pro*", levels: ["low", "high"] },
   // Antigravity Claude 5.5 supports low, medium, high, max (no xhigh, no none).
   { provider: "antigravity", pattern: "*claude*sonnet-5-5*", levels: AG_CLAUDE_5_5_LEVELS },
   { provider: "antigravity", pattern: "*claude*sonnet-5.5*", levels: AG_CLAUDE_5_5_LEVELS },
@@ -84,6 +92,11 @@ const PATTERN_THINKING = [
   // *deepseek-v4.* glob below would advertise medium/xhigh, which the model does
   // not serve, so this entry MUST stay above it.
   { pattern: "*deepseek-v4.1-flash-free*", levels: ["low", "high", "max"] },
+  // DeepSeek's own API serves low|high|max (api-docs.deepseek.com Chat Completions:
+  // "Possible values: none, low, high, max", medium/xhigh map to high). A provider-
+  // scoped entry keeps low reachable there without narrowing the alias globs below,
+  // which also describe gateways that forward the level verbatim.
+  { provider: "deepseek", pattern: "*deepseek-v4*", levels: ["none", "low", "high", "max"] },
   { pattern: "*deepseek-v4.*", levels: ["none", "low", "medium", "high", "xhigh", "max"] },
   // codebuddy-cn per-model effort sets — the server's product-config payload
   // publishes `reasoning.supportedEfforts` per model. NOTE: the chat endpoint

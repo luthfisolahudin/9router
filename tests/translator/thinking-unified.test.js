@@ -103,7 +103,9 @@ describe("applyThinking per provider format", () => {
   });
   it("gemini-3 → thinkingLevel", () => {
     const out = apply("gemini", "gemini-3-pro", { reasoning_effort: "medium" }, "gemini");
-    expect(out.generationConfig.thinkingConfig.thinkingLevel).toBe("medium");
+    // Gemini 3 Pro has no medium tier (low|high only), so medium clamps to the
+    // lowest supported level instead of reaching the wire.
+    expect(out.generationConfig.thinkingConfig.thinkingLevel).toBe("low");
   });
   it("gemini-3 clamps unsupported max/xhigh thinking levels to high", () => {
     const outMax = apply("gemini", "gemini-3-pro", { reasoning_effort: "max" }, "gemini");
@@ -171,10 +173,12 @@ describe("applyThinking per provider format", () => {
     const out = apply("openai", "qwq-32b", { reasoning_effort: "none" }, "qwen");
     expect(out.enable_thinking).toBe(true);
   });
-  it("DeepSeek → enabled + reasoning_effort high (low→high)", () => {
+  it("DeepSeek → enabled + reasoning_effort low (vendor serves low verbatim)", () => {
+    // api-docs.deepseek.com lists none|low|high|max for its own API, so low is
+    // forwarded rather than upgraded to high.
     const out = apply("openai", "deepseek-v4-pro", { reasoning_effort: "low" }, "deepseek");
     expect(out.thinking).toEqual({ type: "enabled" });
-    expect(out.reasoning_effort).toBe("high");
+    expect(out.reasoning_effort).toBe("low");
   });
   it("Kimi on → reasoning_effort", () => {
     const out = apply("openai", "kimi-k2.6", { reasoning_effort: "high" }, "kimi");

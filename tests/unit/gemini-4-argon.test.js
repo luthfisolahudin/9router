@@ -46,10 +46,17 @@ describe("Gemini 4 Argon thinking clamp", () => {
     expect(body.generationConfig.thinkingConfig.thinkingLevel).toBe("high");
   });
 
-  it("keeps minimal for Gemini 3 models (regression guard)", () => {
+  it("keeps minimal for a Gemini 3 model that still serves it (regression guard)", () => {
+    // 3.6 Flash keeps the minimal tier; 3.8 Flash rejects it (see the official level-set test).
+    const body = { reasoning_effort: "none" };
+    applyThinking("gemini", "gemini-3.6-flash", body, "gemini");
+    expect(body.generationConfig.thinkingConfig).toEqual({ thinkingLevel: "minimal", includeThoughts: false });
+  });
+
+  it("clamps minimal to low on Gemini 3.8 Flash, which rejects it with 400", () => {
     const body = { reasoning_effort: "none" };
     applyThinking("gemini", "gemini-3.8-flash", body, "gemini");
-    expect(body.generationConfig.thinkingConfig).toEqual({ thinkingLevel: "minimal", includeThoughts: false });
+    expect(body.generationConfig.thinkingConfig).toEqual({ thinkingLevel: "low", includeThoughts: true });
   });
 });
 

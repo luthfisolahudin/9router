@@ -58,8 +58,8 @@ describe("oc/deepseek-v4.1-flash-free reasoning levels", () => {
     expect(body.thinking).toEqual({ type: "disabled" });
   });
 
-  it("keeps the DeepSeek-API collapse for models whose declared set has no low", () => {
-    expect(effortOnWire("low", { model: "deepseek-v4-pro", provider: "deepseek" })).toBe("high");
+  it("forwards low to DeepSeek, whose own API serves it", () => {
+    expect(effortOnWire("low", { model: "deepseek-v4-pro", provider: "deepseek" })).toBe("low");
   });
 
   it("keeps the max→high clamp for backends that reject max", () => {
