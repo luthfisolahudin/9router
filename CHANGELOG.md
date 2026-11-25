@@ -1,6 +1,7 @@
 # v0.5.123 (2026-11-22)
 
 ## Features
+- **Antigravity**: offer one id per model family and drive effort through `reasoning_effort`. Tier entries (`gemini-4-neon-low`, `claude-opus-5-5-max`, …) are now presets: pickers, `/v1/models` and the MITM mapping list the bare id, while every tier id still resolves for a stored alias. Each bare entry publishes its family's levels on `thinking_levels`, and a tier id advertises only the level it pins instead of the whole family's set.
 - **Antigravity**: add Gemini 4 Hydrogen in low/medium/high/xhigh tiers plus a bare alias resolving to high, and track the tiers in the usage quota list; run CONTINUATION hops so a `max_tokens` above 64K can reach 1M output in one turn. Hydrogen is the only Gemini 4 model with an xhigh thinking level, so `xhigh` is advertised for Hydrogen only and downgrades to `high` on Carbon/Argon.
 - **Antigravity**: lead every generation request with the official 2.33.0 agent identity inside `systemInstruction`, keeping the client's own prompt after it and skipping the block when the prompt already carries it, so AG MITM traffic is not duplicated.
 - **Kiro**: fall back to CreateResponse (`/v1/responses`) when `/generateAssistantResponse` answers 429 `USER_REQUEST_RATE_EXCEEDED` — conversation state, tool results, images, tool specs and thinking config are converted, and both streaming and non-streaming clients keep working (`NINEROUTER_KIRO_CREATE_RESPONSE=auto|always|off`). The bearer token only follows the connection region when it is a Kiro-served runtime region.
@@ -11,6 +12,7 @@
 - **Token Saver**: add the REA allow prompt toggle — strips the built-in security-policy paragraphs from CLI system prompts and appends shared REA guidance for every wire format (claude/openai/responses/gemini/kiro); fail-open, idempotent and off by default.
 
 ## Fixes
+- **Antigravity**: honor the IDE's own effort. The MITM translator read only a numeric `thinkingBudget` and dropped `thinkingLevel`, so every Gemini 4 turn the IDE set to a level fell back to the mapped model's default; and a mapping pointing at a tier preset outranked the level, so the tier now yields to it.
 - **Kiro**: identify as Kiro IDE 1.4.154 on inference, token refresh, model catalog, usage, profile lookup and API-key validation — Kiro's client-version gate rejected the old `kiro-ide/1.0.0` / `KiroIDE-0.10.32` identities with "This version of Kiro is no longer supported" (#5613). All callers now share one identity builder, so they cannot drift apart again.
 - **Antigravity**: correct the model ids and thinking tiers — Carbon, Argon and Hydrogen default to high and Claude 5.5 to medium, Sonnet/Opus 5.5 gain their `max` tiers, the Gemini 4 Neon family is added, and quota lookups, MITM slots and CLI menus follow the new ids.
 - **Antigravity**: align the client identity with the live Hub (2.33.0) and keep the incoming User-Agent shape, so `antigravity/hub/<version>` keeps its `hub/` segment and platform suffix; streaming calls carry `Accept: text/event-stream` again.
