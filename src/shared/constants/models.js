@@ -9,6 +9,7 @@ export {
   getModelStrip,
   PROVIDER_ID_TO_ALIAS,
   getModelsByProviderId,
+  getSelectableModelsByProviderId,
   getModelUpstreamId,
   getModelQuotaFamily
 } from "open-sse/config/providerModels.js";

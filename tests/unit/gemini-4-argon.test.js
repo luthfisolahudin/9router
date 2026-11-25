@@ -8,7 +8,7 @@ import { applyThinking, stripThinkingSuffix } from "../../open-sse/translator/co
 
 describe("Gemini 4 Argon capabilities", () => {
   it.each(["gemini", "vertex", "antigravity"])("declares level-based always-on reasoning on %s", (provider) => {
-    const model = provider === "antigravity" ? "gemini-4-argon-high" : "gemini-4-argon";
+    const model = provider === "antigravity" ? "gemini-4-argon" : "gemini-4-argon";
     const caps = getCapabilitiesForModel(provider, model);
     expect(caps.reasoning).toBe(true);
     expect(caps.thinkingFormat).toBe("gemini-level");
@@ -16,6 +16,12 @@ describe("Gemini 4 Argon capabilities", () => {
     expect(caps.contextWindow).toBe(1048576);
     expect(caps.maxOutput).toBe(65536);
     expect(getThinkingLevels(provider, model)).toEqual(["low", "medium", "high"]);
+  });
+
+  it("advertises only the pinned level on an Antigravity tier id", () => {
+    expect(getThinkingLevels("antigravity", "gemini-4-argon-high")).toEqual(["high"]);
+    expect(getThinkingLevels("antigravity", "gemini-4-argon-medium")).toEqual(["medium"]);
+    expect(getThinkingLevels("antigravity", "gemini-4-argon-low")).toEqual(["low"]);
   });
 });
 

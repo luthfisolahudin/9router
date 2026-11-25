@@ -5,12 +5,16 @@ import geminiRegistry from "../../open-sse/providers/registry/gemini.js";
 import { MODEL_PRICING } from "../../open-sse/providers/pricing.js";
 
 describe("Gemini 3.7 Flash Support & Config (#3286, #3281)", () => {
-  it("registers gemini-3.7-flash tiered models in antigravity provider registry", () => {
-    const agIds = antigravityRegistry.models.map(m => m.id);
+  it("registers gemini-3.7-flash as one entry whose tiers are presets", () => {
+    const agModels = antigravityRegistry.models;
+    const agIds = agModels.map(m => m.id);
+    expect(agIds).toContain("gemini-3.7-flash");
+    // Tiers stay resolvable for a client naming one, but the bare entry is the
+    // model a picker offers.
     expect(agIds).toContain("gemini-3.7-flash-high");
     expect(agIds).toContain("gemini-3.7-flash-medium");
     expect(agIds).toContain("gemini-3.7-flash-low");
-    expect(agIds).not.toContain("gemini-3.7-flash");
+    expect(agModels.filter((m) => !m.tier).map((m) => m.id)).toContain("gemini-3.7-flash");
   });
 
   it("registers gemini-3.7-flash in gemini provider registry", () => {

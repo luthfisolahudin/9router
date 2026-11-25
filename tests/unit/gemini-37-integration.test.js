@@ -76,11 +76,10 @@ describe("Gemini 3.7 MITM model extraction", () => {
 });
 
 describe("Gemini 3.7 MITM tools and catalog", () => {
-  it("includes gemini-3.7-flash tiers in MITM_TOOLS defaultModels", () => {
+  it("maps one gemini-3.7-flash slot instead of its tiers", () => {
     const defaultModelIds = MITM_TOOLS.antigravity.defaultModels.map((m) => m.id);
-    expect(defaultModelIds).toContain("gemini-3.7-flash-high");
-    expect(defaultModelIds).toContain("gemini-3.7-flash-medium");
-    expect(defaultModelIds).toContain("gemini-3.7-flash-low");
+    expect(defaultModelIds).toContain("gemini-3.7-flash");
+    expect(defaultModelIds.filter((id) => id.startsWith("gemini-3.7-flash-"))).toEqual([]);
   });
 
   it("exposes the direct Gemini 3.7 API models and pricing", () => {

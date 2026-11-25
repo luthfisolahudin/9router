@@ -3,7 +3,8 @@
 import { getCapabilitiesForModel } from "./capabilities.js";
 import { matchPattern } from "./pricing.js";
 import { resolveKiroEffortPath } from "../config/kiroConstants.js";
-import { getProviderModels } from "../config/providerModels.js";
+import { getModelMeta } from "../config/providerModels.js";
+import { modelTier } from "./models/schema.js";
 
 // Shared level sets (deduped) — verified against provider docs + wire in thinkingUnified.applyFormat.
 const L = {
@@ -122,9 +123,11 @@ export function getThinkingLevels(provider, model) {
   const caps = getCapabilitiesForModel(normalizedProvider, model);
   if (!caps.reasoning) return null;
   const baseId = String(model || "").replace(/\([^()]+\)\s*$/, "");
-  const modelLevels = normalizedProvider === "codex"
-    ? getProviderModels("cx").find((entry) => entry.id === baseId)?.thinkingLevels
-    : null;
+  // A tiered entry is one fixed effort ("gemini-4-neon-low"), not the whole family:
+  // advertising low..high on it lets a client ask for a level the id cannot honour.
+  const pinned = modelTier(getModelMeta(normalizedProvider, baseId));
+  if (pinned) return [pinned];
+  const modelLevels = getModelMeta(normalizedProvider, baseId)?.thinkingLevels;
   const hit = PATTERN_THINKING.find((entry) =>
     (!entry.provider || entry.provider === normalizedProvider) && matchPattern(entry.pattern, model)
   );

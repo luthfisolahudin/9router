@@ -462,6 +462,9 @@ export async function buildModelsList(kindFilter, options = {}) {
       if (!providerMatchesKinds(providerId, kindFilter)) continue;
       for (const model of providerModels) {
         if (!kindFilter.includes(modelKind(model))) continue;
+        // Tier presets are the same model at a fixed effort; the bare entry carries
+        // the levels, so only it is listed.
+        if (model.tier) continue;
         if (isDisabled(alias, model.id) || isDisabled(providerId, model.id)) continue;
         models.push({
           id: `${alias}/${model.id}`,
@@ -499,6 +502,9 @@ export async function buildModelsList(kindFilter, options = {}) {
         || staticAlias
       ).trim();
       const providerModels = PROVIDER_MODELS[staticAlias] || [];
+      // Pickers get the bare id per family; tier presets stay resolvable but are not
+      // offered, because the bare entry advertises the family's effort levels.
+      const selectableModels = providerModels.filter((m) => !m.tier);
       const enabledModels = conn?.providerSpecificData?.enabledModels;
       const hasExplicitEnabledModels =
         Array.isArray(enabledModels) && enabledModels.length > 0;
@@ -520,7 +526,7 @@ export async function buildModelsList(kindFilter, options = {}) {
               ),
             ),
           )
-        : providerModels.map((model) => model.id);
+        : selectableModels.map((model) => model.id);
 
       if (isCompatibleProvider && rawModelIds.length === 0 && !skipDynamicFetch) {
         rawModelIds = await fetchCompatibleModelIds(conn);

@@ -22,13 +22,8 @@ describe("Gemini 4 Hydrogen Antigravity registry & capabilities", () => {
   });
 
   it("declares Gemini 4 capabilities and thinking levels", () => {
-    for (const model of [
-      "gemini-4-hydrogen",
-      "gemini-4-hydrogen-xhigh",
-      "gemini-4-hydrogen-high",
-      "gemini-4-hydrogen-medium",
-      "gemini-4-hydrogen-low",
-    ]) {
+    // The bare id carries the family's levels; a tier id is one fixed effort.
+    for (const model of ["gemini-4-hydrogen"]) {
       const caps = getCapabilitiesForModel("antigravity", model);
       expect(caps.vision).toBe(true);
       expect(caps.audioInput).toBe(true);
@@ -42,11 +37,22 @@ describe("Gemini 4 Hydrogen Antigravity registry & capabilities", () => {
       expect(getThinkingLevels("antigravity", model)).toEqual(["low", "medium", "high", "xhigh"]);
       expect(isGemini4Model(model)).toBe(true);
     }
+    // Tier ids keep capabilities but advertise only the tier they pin.
+    for (const [model, level] of [
+      ["gemini-4-hydrogen-xhigh", "xhigh"],
+      ["gemini-4-hydrogen-high", "high"],
+      ["gemini-4-hydrogen-medium", "medium"],
+      ["gemini-4-hydrogen-low", "low"],
+    ]) {
+      expect(getCapabilitiesForModel("antigravity", model).reasoning).toBe(true);
+      expect(getThinkingLevels("antigravity", model)).toEqual([level]);
+      expect(isGemini4Model(model)).toBe(true);
+    }
   });
 
   it("keeps Carbon without xhigh (regression guard)", () => {
     expect(getThinkingLevels("antigravity", "gemini-4-carbon")).toEqual(["low", "medium", "high"]);
-    expect(getThinkingLevels("antigravity", "gemini-4-carbon-high")).toEqual(["low", "medium", "high"]);
+    expect(getThinkingLevels("antigravity", "gemini-4-carbon-high")).toEqual(["high"]);
   });
 
   it("prices gemini-4-hydrogen using the Hydrogen pattern", () => {

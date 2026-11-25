@@ -1,7 +1,7 @@
 import REGISTRY from "../providers/registry/index.js";
 // PROVIDER_MODELS now built from providers/registry (transport + models co-located)
 import { PROVIDER_MODELS } from "../providers/index.js";
-import { modelQuotaFamily, modelStrip, modelTargetFormat, modelSupportedFormats, modelParams, normalizeModelId } from "../providers/models/schema.js";
+import { modelQuotaFamily, modelStrip, modelTargetFormat, modelSupportedFormats, modelParams, modelTier, normalizeModelId } from "../providers/models/schema.js";
 import { CODEX_REVIEW_SUFFIX, isMuseSparkModel, opencodeFamilyFormats } from "../providers/models/helpers.js";
 import { FORMATS } from "../translator/formats.js";
 export { PROVIDER_MODELS };
@@ -16,6 +16,14 @@ const toAlias = (aliasOrId) => PROVIDER_ID_TO_ALIAS[aliasOrId] || aliasOrId;
 export function getProviderModels(aliasOrId) {
   const alias = toAlias(aliasOrId);
   return PROVIDER_MODELS[alias] || [];
+}
+
+// Models a picker or model list should offer: tiered entries drop out because the
+// bare entry already advertises the same model with an effort parameter.
+// Resolution keeps the full list — a client naming a tier id, or a stored alias,
+// must still resolve.
+export function getSelectableModels(aliasOrId) {
+  return getProviderModels(aliasOrId).filter((model) => modelTier(model) === null);
 }
 
 export function getDefaultModel(aliasOrId) {
@@ -98,13 +106,15 @@ export function getModelType(aliasOrId, modelId) {
 
 // Raw registry entry for a model (suffix-aware) — executor lookups of per-model hints (e.g. defaultLocation).
 export function getModelMeta(aliasOrId, modelId) {
-  return findModel(PROVIDER_MODELS[aliasOrId], modelId, aliasOrId) || null;
+  const alias = toAlias(aliasOrId);
+  return findModel(PROVIDER_MODELS[alias], modelId, alias) || null;
 }
 
 // Extra request params a model declares (registry `params`), e.g. ["input_type"].
 // Empty array when the model declares none — callers treat that as "no extra params".
 export function getModelParams(aliasOrId, modelId) {
-  return modelParams(findModel(PROVIDER_MODELS[aliasOrId], modelId, aliasOrId));
+  const alias = toAlias(aliasOrId);
+  return modelParams(findModel(PROVIDER_MODELS[alias], modelId, alias));
 }
 
 // Requested level → tier suffixes to try, most specific first; the last one is the
@@ -190,6 +200,12 @@ export const PROVIDER_ID_TO_ALIAS = Object.fromEntries(
 export function getModelsByProviderId(providerId) {
   const alias = PROVIDER_ID_TO_ALIAS[providerId] || providerId;
   return PROVIDER_MODELS[alias] || [];
+}
+
+// Picker-facing list for a provider: the same models without tier presets, because
+// the bare entry carries the family's effort levels.
+export function getSelectableModelsByProviderId(providerId) {
+  return getSelectableModels(PROVIDER_ID_TO_ALIAS[providerId] || providerId);
 }
 
 // Get strip list for a model entry (explicit opt-in only)

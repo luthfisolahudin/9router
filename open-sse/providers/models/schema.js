@@ -37,6 +37,14 @@ export function modelParams(model) {
 export function modelQuotaFamily(model) {
   return model?.quotaFamily || MODEL_DEFAULTS.quotaFamily;
 }
+// Effort tier this entry presets (e.g. "high" for gemini-4-hydrogen-high). A tiered
+// entry is the same model at a fixed effort, so pickers list the bare id and drive
+// effort through reasoning_effort; resolution still finds every tier by id.
+// Declared, never derived: "-max"/"-high" suffixes are real model names elsewhere
+// (qwen3-max, flux-2-max, grok-4.5-high).
+export function modelTier(model) {
+  return typeof model?.tier === "string" ? model.tier : null;
+}
 export function modelStrip(model) {
   return model?.strip || [];
 }

@@ -59,8 +59,12 @@ describe("Antigravity Claude 5.5 models (#4555, #4548, #5785)", () => {
 
   it("declares low/medium/high/max thinking levels for Antigravity Claude 5.5 on both antigravity and ag", () => {
     for (const provider of ["antigravity", "ag"]) {
-      for (const model of ["claude-sonnet-5-5", "claude-sonnet-5-5-max", "claude-opus-5-5", "claude-opus-5-5-max"]) {
+      // The bare id carries the family's levels; a tier id pins exactly one.
+      for (const model of ["claude-sonnet-5-5", "claude-opus-5-5"]) {
         expect(getThinkingLevels(provider, model)).toEqual(["low", "medium", "high", "max"]);
+      }
+      for (const model of ["claude-sonnet-5-5-max", "claude-opus-5-5-max"]) {
+        expect(getThinkingLevels(provider, model)).toEqual(["max"]);
       }
     }
   });
