@@ -91,6 +91,14 @@ const PATTERN_THINKING = [
   // forwards the level verbatim (no low→high collapse). The generic
   // *deepseek-v4.* glob below would advertise medium/xhigh, which the model does
   // not serve, so this entry MUST stay above it.
+  // Alibaba Model Studio (docs.qwencloud.com, alibabacloud.com Model Studio): the
+  // Qwen 3.8 family serves low|medium|xhigh with xhigh as the DEFAULT — the top tier
+  // is not `high`, so the generic qwen set made the model's best level unreachable.
+  // qwen4-max is thinking-on-by-default, so `none` stays available as the off switch.
+  { provider: "alitp-intl", pattern: "*qwen3.8*", levels: ["none", "low", "medium", "xhigh"] },
+  { provider: "alitp-intl", pattern: "*qwen4*", levels: ["none", "low", "medium", "xhigh"] },
+  { provider: "qwencloud", pattern: "*qwen3.8*", levels: ["none", "low", "medium", "xhigh"] },
+  { provider: "qwencloud", pattern: "*qwen4*", levels: ["none", "low", "medium", "xhigh"] },
   { pattern: "*deepseek-v4.1-flash-free*", levels: ["low", "high", "max"] },
   // DeepSeek's own API serves low|high|max (api-docs.deepseek.com Chat Completions:
   // "Possible values: none, low, high, max", medium/xhigh map to high). A provider-
