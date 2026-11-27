@@ -96,6 +96,21 @@
         "tests/unit/security-audit.test.js",
         "tests/unit/usage-api-key-attribution.test.js"
       ]
+    },
+    {
+      "id": "t3-quota-source",
+      "summary": "Serve T3 Code HttpQuotaResponse at /v1/usage/quota, pooling each provider's connections into one account and weighting each window by summed used/total (?group=none keeps the per-connection view).",
+      "files": [
+        "src/lib/usage/t3Quota.js",
+        "src/app/api/v1/usage/quota/route.js"
+      ],
+      "markers": [
+        "function aggregateProviderWindows(connectionWindows) {",
+        "function collectConnectionWindows(connection, usage) {",
+        "import { buildT3QuotaResponse } from \"@/lib/usage/t3Quota.js\";",
+        "searchParams.get(\"group\")"
+      ],
+      "tests": ["tests/unit/t3-quota-route.test.js"]
     }
   ]
 }

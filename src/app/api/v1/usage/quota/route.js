@@ -46,11 +46,15 @@ async function fetchUsageForConnection(connection) {
 /**
  * GET /api/v1/usage/quota (rewritten from /v1/usage/quota)
  * Returns T3 Code HttpQuotaResponse ({ version: 1, accounts }) for active quota-capable connections.
+ * Accounts are pooled per provider by default; `?group=none` returns one account per connection.
  */
-export async function GET() {
+export async function GET(request) {
   try {
+    const group = new URL(request?.url ?? "http://localhost/v1/usage/quota").searchParams.get("group");
     const connections = await getProviderConnections();
-    const payload = await buildT3QuotaResponse(connections, fetchUsageForConnection);
+    const payload = await buildT3QuotaResponse(connections, fetchUsageForConnection, {
+      group: group === "none" ? "none" : "provider",
+    });
     return NextResponse.json(payload, {
       headers: { "Cache-Control": "no-store" },
     });
