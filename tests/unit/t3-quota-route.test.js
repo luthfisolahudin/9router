@@ -463,4 +463,31 @@ describe("t3Quota", () => {
       "quota-antigravity-ag2",
     ]);
   });
+
+  it("groups a window next to its own period, not by period across families", async () => {
+    // Regression: ordering by period alone interleaved the two families, so a
+    // session read nowhere near its weekly. Gemini first, then Claude & GPT,
+    // because that is the order the vendor reports them in.
+    const fetcher = vi.fn(async () =>
+      antigravityUsage({
+        geminiSession: flatQuota(100, 1000, "2026-11-27T10:00:00.000Z"),
+        geminiWeekly: flatQuota(200, 1000, "2026-12-01T00:00:00.000Z"),
+        claudeSession: flatQuota(300, 1000, "2026-11-27T11:00:00.000Z"),
+        claudeWeekly: flatQuota(400, 1000, "2026-12-02T00:00:00.000Z"),
+      }),
+    );
+
+    const result = await buildT3QuotaResponse(
+      [{ id: "ag1", provider: "antigravity", authType: "oauth", isActive: true }],
+      fetcher,
+    );
+
+    expect(result.accounts[0].windows.map((window) => window.label)).toEqual([
+      "Gemini (5h)",
+      "Gemini (Weekly)",
+      "Claude & GPT (5h)",
+      "Claude & GPT (Weekly)",
+    ]);
+  });
+
 });

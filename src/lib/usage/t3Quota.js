@@ -12,6 +12,15 @@ import { isLeaseConnection } from "open-sse/services/minimaxCodeLease.js";
 const WINDOW_KIND_ORDER = { session: 0, weekly: 1, monthly: 2 };
 const OTHER_WINDOW_ORDER = 3;
 
+/**
+ * The part of a window name that is not its period: "Gemini (5h)" -> "Gemini".
+ * Windows that share it are one allowance, and reading them together is what a
+ * person comparing a session against its weekly actually does.
+ */
+function windowFamily(name) {
+  return String(name || "").replace(/\s*\([^)]*\)\s*$/, "").trim().toLowerCase();
+}
+
 function inferWindowKind(name) {
   const text = String(name || "").toLowerCase();
   if (/\b(5h|5-hour|5 hour|session)\b/.test(text)) return "session";
@@ -114,6 +123,7 @@ function collectConnectionWindows(connection, usage) {
     const identity = windowIdentity(row) || `window-${index + 1}`;
     windows.push({
       identity,
+      family: windowFamily(label) || identity,
       kind: inferWindowKind(`${label} ${identity.replace(/[_.-]+/g, " ")}`),
       label,
       usedPercent: clampPercent(
@@ -194,6 +204,7 @@ function aggregateProviderWindows(connectionWindows) {
     const representative = representativeLabel(contributors);
     pooled.push({
       identity,
+      family: representative.family,
       kind: representative.kind,
       label: approximate ? `${representative.label}~` : representative.label,
       usedPercent: clampPercent(usedPercent),
@@ -202,37 +213,76 @@ function aggregateProviderWindows(connectionWindows) {
   }
 
   const seenIds = new Set();
+  // Family order follows first appearance, so the vendor's own grouping survives
+  // instead of being re-alphabetised by this module. Families with a single
+  // window rank equally, which leaves them ordered by period instead.
+  const familyCounts = new Map();
+  for (const window of pooled) {
+    familyCounts.set(window.family, (familyCounts.get(window.family) || 0) + 1);
+  }
+  const familyOrder = new Map();
+  for (const window of pooled) {
+    if (familyCounts.get(window.family) > 1 && !familyOrder.has(window.family)) {
+      familyOrder.set(window.family, familyOrder.size);
+    }
+  }
+  const rank = (family) => familyOrder.get(family) ?? familyOrder.size;
+
   const windows = pooled.map((window, index) => ({
     id: toWindowId(window.identity, index, seenIds),
     kind: window.kind,
     label: window.label,
     usedPercent: window.usedPercent,
     ...(window.resetsAt ? { resetsAt: window.resetsAt } : {}),
+    family: window.family,
   }));
 
-  return windows.sort(
-    (a, b) => kindOrder(a.kind) - kindOrder(b.kind) || a.id.localeCompare(b.id),
-  );
+  return windows
+    .sort(
+      (a, b) =>
+        rank(a.family) - rank(b.family) ||
+        kindOrder(a.kind) - kindOrder(b.kind) ||
+        a.id.localeCompare(b.id),
+    )
+    .map(({ family: _family, ...window }) => window);
 }
 
 function mapConnectionWindowsToAccount(connection, collected) {
   if (collected.length === 0) return null;
 
   const seenIds = new Set();
+  const familyCounts = new Map();
+  for (const window of collected) {
+    familyCounts.set(window.family, (familyCounts.get(window.family) || 0) + 1);
+  }
+  const familyOrder = new Map();
+  for (const window of collected) {
+    if (familyCounts.get(window.family) > 1 && !familyOrder.has(window.family)) {
+      familyOrder.set(window.family, familyOrder.size);
+    }
+  }
+  const rank = (family) => familyOrder.get(family) ?? familyOrder.size;
+
   const windows = collected.map((window, index) => ({
     id: toWindowId(window.identity, index, seenIds),
     kind: window.kind,
     label: window.label,
     usedPercent: clampPercent(window.usedPercent),
     ...(window.resetsAt ? { resetsAt: window.resetsAt } : {}),
+    family: window.family,
   }));
 
   return {
     id: `quota-${connection.provider}-${connection.id}`,
     label: providerDisplayName(connection.provider),
-    windows: windows.sort(
-      (a, b) => kindOrder(a.kind) - kindOrder(b.kind) || a.id.localeCompare(b.id),
-    ),
+    windows: windows
+      .sort(
+        (a, b) =>
+          rank(a.family) - rank(b.family) ||
+          kindOrder(a.kind) - kindOrder(b.kind) ||
+          a.id.localeCompare(b.id),
+      )
+      .map(({ family: _family, ...window }) => window),
   };
 }
 
